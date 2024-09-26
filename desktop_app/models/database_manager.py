@@ -410,6 +410,55 @@ def log_action(employee_id, action):
         conn.commit()
         print(f"Действие сотрудника {employee_id} успешно зафиксировано.")
 
+
+def update_employee_role(employee_id, new_role):
+    """
+    Обновляет роль сотрудника.
+    :param employee_id: Уникальный идентификатор сотрудника
+    :param new_role: Новая роль ("менеджер", "администратор" или "системный администратор")
+    """
+    with sqlite3.connect(DATABASE) as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE Сотрудники SET Роль = ? WHERE id = ?
+        """, (new_role, employee_id))
+        conn.commit()
+        print(f"Роль сотрудника {employee_id} успешно обновлена.")
+
+def get_employee_by_id(employee_id):
+    """Возвращает информацию о сотруднике по ID"""
+    with sqlite3.connect(DATABASE) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM Сотрудники WHERE id = ?", (employee_id,))
+        return cursor.fetchone()
+
+def update_employee_info(employee_id, last_name, first_name, middle_name, phone, username, role):
+    """Обновляет информацию о сотруднике"""
+    with sqlite3.connect(DATABASE) as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE Сотрудники SET Фамилия = ?, Имя = ?, Отчество = ?, Телефон = ?, username = ?, Роль = ? WHERE id = ?
+        """, (last_name, first_name, middle_name, phone, username, role, employee_id))
+        conn.commit()
+        print(f"Информация о сотруднике {employee_id} успешно обновлена.")
+
+def check_username_uniqueness(username, employee_id):
+    """Проверяет, уникален ли логин, исключая текущего сотрудника"""
+    with sqlite3.connect(DATABASE) as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT COUNT(*) FROM Сотрудники WHERE username = ? AND id != ?
+        """, (username, employee_id))
+        return cursor.fetchone()[0] == 0
+
+def delete_employee_by_id(employee_id):
+    """Удаляет сотрудника из базы данных по ID"""
+    with sqlite3.connect(DATABASE) as conn:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM Сотрудники WHERE id = ?", (employee_id,))
+        conn.commit()
+        print(f"Сотрудник с ID {employee_id} успешно удален.")
+
 ##******************************************************  Задачи  ************************************************************##
 
 # Добавление задачи для сотрудника

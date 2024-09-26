@@ -8,7 +8,7 @@ from desktop_app.views.room_view import RoomView # Импортируем RoomVi
 from desktop_app.views.client_view import ClientView  # Импортируем ClientView
 from desktop_app.views.reservation_view import ReservationView
 from desktop_app.views.login_view import LoginView
-from desktop_app.views.employee_view import EmployeeRegistration
+from desktop_app.views.employee_view import EmployeeListView
 from desktop_app.models.database_manager import apply_migrations, generate_clients, generate_reservations, initialize_rooms, create_tables
 from desktop_app.models.database_manager import add_employee
 
@@ -65,20 +65,27 @@ class MainApp(tk.Tk):
 
     def show_main_app(self, role, username):
         """Показываем основное приложение в зависимости от роли сотрудника и выводим имя пользователя"""
+        print(f"Метод show_main_app вызван! Роль: {role}, Пользователь: {username}")  # Отладка
         self.role = role
         self.username = username  # Сохраняем имя пользователя
-        print(f"Вошел пользователь с ролью: {self.role}")  # Отладка
         self.login_view.destroy()  # Закрываем окно авторизации
         self.deiconify()  # Показываем главное окно
 
         # Устанавливаем заголовок окна с указанием имени пользователя
         self.update_title()
-        self.create_manager_menu()  # Создаем меню для менеджера
 
-        if self.role == 'manager':
-            self.create_manager_menu()  # Меню для менеджера
-        elif self.role == 'receptionist':
-            self.create_receptionist_menu()  # Меню для ресепшиониста
+        # Вызов правильного меню в зависимости от роли
+        if self.role == 'менеджер':
+            print("Создание меню для менеджера")  # Отладка
+            self.create_manager_menu()
+        elif self.role == 'администратор':
+            print("Создание меню для администратора")  # Отладка
+            self.create_receptionist_menu()
+        elif self.role == 'системный администратор':
+            print("Создание меню для системного администратора")  # Отладка
+            self.create_system_admin_menu()
+        else:
+            print(f"Неизвестная роль: {self.role}")  # Отладка для проверки непредвиденной роли
 
     def update_title(self):
         """Обновляет заголовок окна с именем пользователя"""
@@ -109,9 +116,6 @@ class MainApp(tk.Tk):
         menubar = tk.Menu(self)
         self.config(menu=menubar)
 
-        # # Устанавливаем заголовок окна с указанием имени пользователя
-        # self.update_title()
-
         # Меню "Управление номерами"
         room_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Управление номерами", menu=room_menu)
@@ -130,8 +134,9 @@ class MainApp(tk.Tk):
         # Меню "Управление сотрудниками"
         print("Добавление пункта 'Управление сотрудниками' в меню")  # Отладка
         employee_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Управление сотрудниками", menu=employee_menu)
-        employee_menu.add_command(label="Добавить сотрудника", command=self.open_employee_registration)
+        menubar.add_cascade(label="Управление сотрудниками", command=self.open_employee_list_view)
+        employee_menu.add_command(label="Добавить сотрудника", command=self.open_employee_list_view)
+        employee_menu.add_command(label="Просмотр и редактирование сотрудников", command=self.open_employee_list_view)
 
         # Пункт "Выйти"
         menubar.add_command(label="Выйти", command=self.logout)
@@ -163,12 +168,19 @@ class MainApp(tk.Tk):
         # Пункт "Выйти"
         menubar.add_command(label="Выйти", command=self.logout)
 
-    def open_employee_registration(self):
-        """Открывает фрейм для управления сотрудниками"""
-        print("Открытие окна регистрации сотрудников...")  # Отладка
+    # def open_employee_registration(self):
+    #     """Открывает фрейм для управления сотрудниками"""
+    #     print("Открытие окна регистрации сотрудников...")  # Отладка
+    #     self.clear_frame()  # Очищает контейнер от предыдущего содержимого
+    #     employee_view = EmployeeListView(self.container)  # Используем EmployeeListView для отображения таблицы и формы
+    #     employee_view.pack(fill=tk.BOTH, expand=True)
+
+    def open_employee_list_view(self):
+        """Открывает фрейм для просмотра и редактирования сотрудников"""
+        print("Открытие окна просмотра сотрудников...")  # Отладка
         self.clear_frame()  # Очищает контейнер от предыдущего содержимого
-        employee_registration = EmployeeRegistration(self.container)  # Загружаем фрейм для сотрудников в контейнер
-        employee_registration.pack(fill=tk.BOTH, expand=True)
+        employee_list_view = EmployeeListView(self.container)  # Загружаем фрейм для сотрудников в контейнер
+        employee_list_view.pack(fill=tk.BOTH, expand=True)
 
     def open_room_view(self):
         """Открывает фрейм для управления номерами"""
@@ -191,8 +203,15 @@ class MainApp(tk.Tk):
     def clear_frame(self):
         """Очищает содержимое контейнера"""
         print("Очистка контейнера!")  # Для отладки
-        for widget in self.container.winfo_children():
-            widget.destroy()
+
+        # Убедитесь, что контейнер существует
+        if self.container is not None and self.container.winfo_exists():
+            for widget in self.container.winfo_children():
+                widget.destroy()
+        else:
+            # Если контейнер не существует, пересоздайте его
+            self.container = tk.Frame(self)
+            self.container.pack(fill=tk.BOTH, expand=True)
 
     def save_state(self):
         """Сохраняет состояние формы"""
@@ -210,16 +229,16 @@ class MainApp(tk.Tk):
 
 if __name__ == "__main__":
     print(f"Файл базы данных найден по пути: {DATABASE}")
-    create_tables()
+    # create_tables()
     apply_migrations()
-    initialize_rooms()
+    # initialize_rooms()
 
 
     # generate_clients()
     # generate_reservations()
 
-    # Добавляем сотрудника с проверкой уникальности username
-    add_employee('SuperUser', 'admin', None, '+7 999 258 66 33', 'admin', '000', 'Менеджер', role='менеджер')
+    # # Добавляем сотрудника с проверкой уникальности username
+    # add_employee('SuperUser', 'admin', None, '+7 999 258 66 33', 'admin', '000', 'Менеджер', role='менеджер')
 
     # Запуск основного приложения
     app = MainApp()
