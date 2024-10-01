@@ -1,7 +1,9 @@
 from desktop_app.models.database_manager import get_all_clients, update_client_in_db
 import sqlite3
 
-DATABASE = 'F:/hotel_management_project/hotel_management.db'
+
+DATABASE = 'F:\Hotel Management System/hotel_management.db'
+
 # Функция добавления клиента
 def add_new_client(last_name, first_name, middle_name, phone, email):
     """Добавление клиента в базу данных"""

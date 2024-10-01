@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
-from desktop_app.models.database_manager import authenticate_employee
+from desktop_app.models.database_manager import authenticate_employee, get_user_id
 import hashlib  # Для хеширования паролей
 
 DATABASE = 'hotel_management.db'
@@ -49,9 +49,13 @@ class LoginView(tk.Toplevel):
 
     def grant_access(self, role, username):
         """Открытие основного приложения с правами сотрудника"""
+        # Получаем user_id на основе имени пользователя
+        user_id = get_user_id(username)  # Предположим, что этот метод возвращает корректный ID пользователя
+
         # Проверка, является ли self.master экземпляром главного приложения
         if hasattr(self.parent, 'show_main_app'):
-            self.parent.show_main_app(role, username)  # Передаем роль и имя пользователя в основное приложение
+            self.parent.show_main_app(role, username,
+                                      user_id)  # Передаем роль, имя пользователя и ID в основное приложение
             self.destroy()  # Закрываем окно авторизации
         else:
             messagebox.showerror("Ошибка", "Не удалось найти главное приложение для авторизации")

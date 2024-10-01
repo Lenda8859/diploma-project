@@ -6,7 +6,7 @@ import random
 from tkinter import messagebox
 from desktop_app.models.status_enums import ReservationStatus, RoomStatus
 
-DATABASE = 'F:/hotel_management_project/hotel_management.db'
+DATABASE = 'F:\Hotel Management System/hotel_management.db'
 
 def create_tables():
     """Создание таблиц, если они не существуют"""
@@ -366,13 +366,25 @@ def add_employee(last_name, first_name, middle_name, phone, username, password, 
             print("Сотрудник успешно добавлен.")
 
 # Получение всех сотрудников
-def get_all_employees():
-    """
-    Возвращает список всех сотрудников из базы данных.
-    """
+def get_employees_brief(): # get_all_employees
+    """Возвращает краткий список всех сотрудников из базы данных"""
     with sqlite3.connect(DATABASE) as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM Сотрудники")
+        cursor.execute("""
+            SELECT id, Фамилия, Имя FROM Сотрудники
+        """)
+        employees = cursor.fetchall()
+        return employees
+
+def get_employees_full(): #get_all_employees_bd
+    """Возвращает полный список всех сотрудников из базы данных"""
+    with sqlite3.connect(DATABASE) as conn:
+        cursor = conn.cursor()
+        # Извлекаем все необходимые поля из таблицы Сотрудники
+        cursor.execute("""
+            SELECT id, Фамилия, Имя, Отчество, Телефон, username, password, Должность, График, Роль
+            FROM Сотрудники
+        """)
         employees = cursor.fetchall()
         return employees
 
@@ -459,37 +471,171 @@ def delete_employee_by_id(employee_id):
         conn.commit()
         print(f"Сотрудник с ID {employee_id} успешно удален.")
 
+def get_user_id(username):
+    """Получить user_id по имени пользователя"""
+    with sqlite3.connect('F:/Hotel Management System/hotel_management.db') as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id FROM Сотрудники WHERE username = ?", (username,))
+        result = cursor.fetchone()
+        return result[0] if result else None
+
+
+def get_employee_id_by_name(employee_name):
+    """Возвращает ID сотрудника по его полному имени"""
+    print(f"Поиск ID для сотрудника: {employee_name}")
+
+    # Удаляем идентификатор в скобках, если он есть
+    if "(" in employee_name and ")" in employee_name:
+        employee_name = employee_name.split(" (")[0].strip()
+
+    print(f"Отформатированное имя сотрудника: {employee_name}")
+
+    with sqlite3.connect(DATABASE) as conn:
+        cursor = conn.cursor()
+        # Разбиваем имя на фамилию и имя (и возможные дополнительные части)
+        parts = employee_name.split(" ", 1)  # Разделяем только по первому пробелу
+        print(f"Разделено на: {parts}")  # Отладочная информация
+
+        if len(parts) != 2:
+            # Если формат имени не соответствует ожидаемому, возвращаем None
+            print("Некорректный формат имени")
+            return None
+
+        last_name, first_name = parts  # Фамилия и оставшаяся часть имени
+        cursor.execute("""
+            SELECT id FROM Сотрудники WHERE Фамилия = ? AND Имя = ?
+        """, (last_name, first_name))
+        result = cursor.fetchone()
+        print(f"Найден результат: {result}")  # Отладочная информация
+
+        return result[0] if result else None
+
 ##******************************************************  Задачи  ************************************************************##
 
-# Добавление задачи для сотрудника
-def add_task(employee_id, description, due_date=None, status="ожидание"):
+# Добавление новой задачи
+def add_task(task_type, employee_id, description, status, due_date):
+    """Добавление новой задачи в базу данных"""
     with sqlite3.connect(DATABASE) as conn:
         cursor = conn.cursor()
         cursor.execute("""
-            INSERT INTO Задачи (Сотрудник_id, Описание, Срок_исполнения, Статус)
-            VALUES (?, ?, ?, ?)
-        """, (employee_id, description, due_date, status))
+            INSERT INTO Задачи (Тип_задачи, Сотрудник_id, Описание, Статус, Срок_исполнения)
+            VALUES (?, ?, ?, ?, ?)
+        """, (task_type, employee_id, description, status, due_date))
         conn.commit()
-        print("Задача успешно добавлена.")
 
-# Изменение статуса задачи
-def update_task_status(task_id, new_status):
+# # Получение всех задач
+# def get_all_tasks():
+#     with sqlite3.connect(DATABASE) as conn:
+#         cursor = conn.cursor()
+#         cursor.execute("""
+#             SELECT id, Описание, Сотрудник_id, Статус, Срок_исполнения FROM Задачи
+#         """)
+#         tasks = cursor.fetchall()
+#         print(tasks)  # Временно выводим данные в консоль для проверки
+#         return tasks
+
+def get_all_tasks():
     with sqlite3.connect(DATABASE) as conn:
         cursor = conn.cursor()
+        cursor.execute("""
+            SELECT
+                Задачи.id,
+                Задачи.Тип_задачи,  -- Новый столбец Тип_задачи
+                Задачи.Описание,
+                Сотрудники.Фамилия || ' ' || Сотрудники.Имя AS Сотрудник,
+                Задачи.Статус,
+                Задачи.Срок_исполнения
+            FROM Задачи
+            LEFT JOIN Сотрудники ON Задачи.Сотрудник_id = Сотрудники.id
+        """)
+        tasks = cursor.fetchall()
+        print(tasks)  # Временно выводим данные в консоль для проверки
+        return tasks
+
+# Обновление статуса задачи
+def update_task_status(task_id, new_status, user_id):
+    """Обновление статуса задачи и запись в историю"""
+    with sqlite3.connect(DATABASE) as conn:
+        cursor = conn.cursor()
+
+        # Обновление статуса задачи
         cursor.execute("""
             UPDATE Задачи SET Статус = ? WHERE id = ?
         """, (new_status, task_id))
-        conn.commit()
-        print(f"Статус задачи {task_id} успешно обновлен на {new_status}.")
 
-#Получение всех задач
-def get_all_tasks():
-    """Получение всех задач из таблицы Задачи"""
+        # Добавление записи в историю
+        cursor.execute("""
+            INSERT INTO История_задач (Задача_id, Сотрудник_id, Статус, Дата_изменения)
+            VALUES (?, ?, ?, datetime('now'))
+        """, (task_id, user_id, new_status))
+
+        conn.commit()
+
+# Удаление задачи
+def delete_task_bd(task_id):
+    """Удаление задачи из базы данных"""
+    try:
+        with sqlite3.connect(DATABASE) as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM Задачи WHERE id = ?", (task_id,))
+            conn.commit()
+            print(f"Задача с ID {task_id} успешно удалена.")
+    except sqlite3.Error as e:
+        print(f"Ошибка при удалении задачи: {e}")
+        raise e  # Поднять ошибку для обработки в вызывающей функции
+
+def get_filtered_tasks(employee_id=None, status=None, start_date=None, end_date=None):
+    query = "SELECT * FROM Задачи WHERE 1=1"
+    params = []
+
+    if employee_id:
+        query += " AND Сотрудник_id = ?"
+        params.append(employee_id)
+
+    if status:
+        query += " AND Статус = ?"
+        params.append(status)
+
+    if start_date and end_date:
+        query += " AND Дата_создания BETWEEN ? AND ?"
+        params.append(start_date)
+        params.append(end_date)
+
     with sqlite3.connect(DATABASE) as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM Задачи")  # Используем правильное имя таблицы
-        tasks = cursor.fetchall()
-        return tasks
+        cursor.execute(query, params)
+        return cursor.fetchall()
+
+def get_tasks_by_employee(employee_id):
+    with sqlite3.connect(DATABASE) as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT * FROM Задачи WHERE Сотрудник_id = ?
+        """, (employee_id,))
+        return cursor.fetchall()
+
+def get_filtered_tasks(employee=None, status=None, start_date=None, end_date=None):
+    query = "SELECT * FROM Задачи WHERE 1=1"
+    params = []
+
+    if employee:
+        query += " AND Сотрудник_id = ?"
+        params.append(employee.split("(")[-1].replace(")", ""))  # Извлечение ID сотрудника из строки
+
+    if status:
+        query += " AND Статус = ?"
+        params.append(status)
+
+    if start_date and end_date:
+        query += " AND Дата_создания BETWEEN ? AND ?"
+        params.append(start_date)
+        params.append(end_date)
+
+    with sqlite3.connect(DATABASE) as conn:
+        cursor = conn.cursor()
+        cursor.execute(query, params)
+        return cursor.fetchall()
+
 
 ##*********************************************  Отчеты  ***************************************************************##
 
@@ -563,6 +709,19 @@ def apply_migrations():
             print("Миграция применена.")
         else:
             print("Таблица 'Бронирования' уже существует. Миграция пропущена.")
+
+    """Проверка наличия таблицы 'Задачи' и создание ее при необходимости"""
+    with sqlite3.connect(DATABASE) as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+                SELECT count(name) FROM sqlite_master WHERE type='table' AND name='Задачи'
+            """)
+        if cursor.fetchone()[0] == 0:
+            print("Таблица 'Задачи' не найдена. Создание таблицы...")
+            # Если таблица не найдена, выполнить SQL-скрипт для создания
+            create_tables()
+        else:
+            print("Таблица 'Задачи' уже существует.")
 
 
 

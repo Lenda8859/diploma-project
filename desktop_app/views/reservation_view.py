@@ -8,7 +8,7 @@ from tkcalendar import DateEntry
 from datetime import datetime
 from desktop_app.models.status_enums import ReservationStatus
 import sqlite3
-DATABASE = 'F:/hotel_management_project/hotel_management.db'
+DATABASE = 'F:/Hotel Management System/hotel_management.db'
 class ReservationView(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
@@ -68,6 +68,8 @@ class ReservationView(tk.Frame):
         # Кнопки для управления бронированиями
         self.create_action_buttons()
 
+        self.reservation_treeview.bind("<<TreeviewSelect>>", self.on_reservation_select)
+
     def create_form(self):
         """Создает форму для добавления и редактирования бронирований"""
         form_frame = tk.Frame(self)
@@ -103,6 +105,7 @@ class ReservationView(tk.Frame):
         tk.Label(form_frame, text="Примечания").pack(side=tk.LEFT, padx=5)
         self.notes_var = tk.StringVar()
         tk.Entry(form_frame, textvariable=self.notes_var).pack(side=tk.LEFT, padx=5)
+
 
     def create_client_search_bar(self):
         """Создаем форму для поиска клиента по фамилии, имени и отчеству"""
@@ -195,7 +198,7 @@ class ReservationView(tk.Frame):
             return False
 
 
-    def handle_create_reservation(self):################################################
+    def handle_create_reservation(self):
         """Создание нового бронирования на основе данных из интерфейса"""
         client_name = self.client_name_var.get().strip()
         print(f"Отладка: Выбранный клиент - {client_name}")
@@ -417,6 +420,21 @@ class ReservationView(tk.Frame):
         res_check_out(reservation_id, room_number)  # Передаем reservation_id и room_number
         self.load_reservations()
 
+    def on_reservation_select(self, event):
+        """Заполнение полей формы данными выбранного бронирования для редактирования"""
+        selected_item = self.reservation_treeview.selection()  # Получаем выбранный элемент в Treeview
+        if selected_item:
+            reservation_info = self.reservation_treeview.item(selected_item)["values"]  # Получаем данные о бронировании
+
+            # Заполняем поля формы данными о выбранном бронировании
+            self.client_name_var.set(reservation_info[1])  # ФИО клиента
+            self.check_in_date_var.set_date(reservation_info[2])  # Дата заезда
+            self.check_out_date_var.set_date(reservation_info[3])  # Дата выезда
+            self.room_id_var.set(reservation_info[4])  # Номер комнаты
+            self.reservation_status_var.set(reservation_info[5])  # Статус бронирования
+            self.payment_status_var.set(reservation_info[6])  # Статус оплаты
+            self.payment_method_var.set(reservation_info[7])  # Способ оплаты
+            self.notes_var.set(reservation_info[8])  # Примечания
 
 
 

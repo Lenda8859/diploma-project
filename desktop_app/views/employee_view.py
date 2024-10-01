@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-from desktop_app.models.database_manager import add_employee, get_all_employees
+from desktop_app.models.database_manager import add_employee, get_employees_full
 
 
 class EmployeeListView(tk.Frame):
@@ -63,6 +63,7 @@ class EmployeeListView(tk.Frame):
 
         # Форма для добавления нового сотрудника
         self.create_employee_form()
+        self.tree.bind("<<TreeviewSelect>>", self.on_employee_select)
 
     def create_employee_form(self):
         """Создает форму для добавления нового сотрудника"""
@@ -115,7 +116,7 @@ class EmployeeListView(tk.Frame):
         """Загружает список сотрудников из базы данных в таблицу"""
         self.tree.delete(*self.tree.get_children())  # Очищаем текущие данные в таблице
 
-        employees = get_all_employees()
+        employees = get_employees_full()
         for emp in employees:
             # ID, Фамилия, Имя, Отчество, Телефон, Логин, Пароль, Должность, График, Роль
             self.tree.insert("", "end",
@@ -186,3 +187,20 @@ class EmployeeListView(tk.Frame):
                 self.load_employees()  # Обновляем таблицу после удаления
             except Exception as e:
                 messagebox.showerror("Ошибка", f"Не удалось удалить сотрудника: {e}")
+
+    def on_employee_select(self, event):
+        """Заполнение полей формы данными выбранного сотрудника для редактирования"""
+        selected_item = self.tree.selection()  # Получаем выбранный элемент в Treeview
+        if selected_item:
+            employee_info = self.tree.item(selected_item)["values"]  # Получаем данные о сотруднике
+
+            # Заполняем поля формы данными о выбранном сотруднике
+            self.last_name_var.set(employee_info[1])  # Фамилия
+            self.first_name_var.set(employee_info[2])  # Имя
+            self.middle_name_var.set(employee_info[3])  # Отчество
+            self.phone_var.set(employee_info[4])  # Телефон
+            self.username_var.set(employee_info[5])  # Логин
+            self.password_var.set(employee_info[6])  # Пароль
+            self.position_var.set(employee_info[7])  # Должность
+            self.schedule_var.set(employee_info[8])  # График
+            self.role_var.set(employee_info[9])  # Роль

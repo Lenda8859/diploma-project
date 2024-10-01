@@ -9,21 +9,18 @@ from desktop_app.views.client_view import ClientView  # Импортируем C
 from desktop_app.views.reservation_view import ReservationView
 from desktop_app.views.login_view import LoginView
 from desktop_app.views.employee_view import EmployeeListView
-from desktop_app.models.database_manager import apply_migrations, generate_clients, generate_reservations, initialize_rooms, create_tables
-from desktop_app.models.database_manager import add_employee
-
-
-
+from desktop_app.models.database_manager import apply_migrations, create_tables, get_user_id
+from desktop_app.views.task_view import TaskView
 
 # Переменная с путём к базе данных
-DATABASE = 'F:/hotel_management_project/hotel_management.db'
+DATABASE = 'F:/Hotel Management System/hotel_management.db'
 #
 
 class MainApp(tk.Tk):
     def __init__(self):
         super().__init__()
 
-        self.title("Управление гостиницей")
+        self.title("Hotel Management System")
         self.geometry("1750x720")
 
         # Скрываем основное окно до авторизации
@@ -33,6 +30,7 @@ class MainApp(tk.Tk):
         self.login_view = LoginView(self)
         self.login_view.grab_set()
 
+
         # Фрейм для отображения содержимого
         self.container = tk.Frame(self)
         self.container.pack(fill=tk.BOTH, expand=True)
@@ -41,55 +39,70 @@ class MainApp(tk.Tk):
         menubar = tk.Menu(self)
         self.config(menu=menubar)
 
+        # Начальные значения атрибутов пользователя
+        self.user_role = None
+        self.user_id = None
 
+        # Флаг, чтобы предотвратить рекурсивный вызов open_task_view
+        self.task_view_opened = False
 
         # Меню "Номера"
         room_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Номера", menu=room_menu)
-        room_menu.add_command(label="Управление номерами", command=self.open_room_view)
+        room_menu.add_command(label="Номера", command=self.open_room_view)
 
         # Добавь рядом пункт для управления клиентами
         client_menu = tk.Menu(menubar, tearoff=0)  # Используем правильное имя 'menubar'
-        menubar.add_cascade(label="Управление клиентами", menu=client_menu)
+        menubar.add_cascade(label="Клиенты", menu=client_menu)
         client_menu.add_command(label="Просмотр клиентов", command=self.open_client_view)
 
         # Меню "Бронирования"
         reservation_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Бронирования", menu=reservation_menu)
-        #reservation_menu.add_command(label="Управление бронированиями", command=self.open_reservation_view)
-        reservation_menu.add_command(label="Управление бронированиями", command=lambda: print("Пункт меню выбран!") or self.open_reservation_view())
-
+        reservation_menu.add_command(label="Бронирования", command=lambda: self.open_reservation_view())
 
         # Меню "Выход"
         menubar.add_command(label="Выход", command=self.quit)
 
-    def show_main_app(self, role, username):
-        """Показываем основное приложение в зависимости от роли сотрудника и выводим имя пользователя"""
-        print(f"Метод show_main_app вызван! Роль: {role}, Пользователь: {username}")  # Отладка
-        self.role = role
-        self.username = username  # Сохраняем имя пользователя
-        self.login_view.destroy()  # Закрываем окно авторизации
-        self.deiconify()  # Показываем главное окно
+    def open_task_view(self, user_role, user_id=None):
+        """Открывает фрейм для задач"""
+        print("Переключение на модуль 'Задачи'")
+        # Проверяем флаг, чтобы предотвратить повторное открытие
+        if not self.task_view_opened:
+            self.clear_frame()  # Удаляем предыдущий фрейм
 
-        # Устанавливаем заголовок окна с указанием имени пользователя
+            task_view = TaskView(self.container, user_role=user_role, user_id=user_id)
+            task_view.pack(fill=tk.BOTH, expand=True)
+
+            # Устанавливаем флаг после первого открытия
+            self.task_view_opened = True
+
+    def show_main_app(self, role, username, user_id=None):
+        print(
+            f"Метод show_main_app вызван! Роль: {role}, Пользователь: {username}, ID пользователя: {user_id}")  # Отладка
+        self.user_role = role
+        self.user_id = user_id
+        self.username = username
+        self.login_view.destroy()
+        self.deiconify()
         self.update_title()
 
         # Вызов правильного меню в зависимости от роли
-        if self.role == 'менеджер':
-            print("Создание меню для менеджера")  # Отладка
+        if self.user_role == 'менеджер':
             self.create_manager_menu()
-        elif self.role == 'администратор':
-            print("Создание меню для администратора")  # Отладка
+        elif self.user_role == 'администратор':
             self.create_receptionist_menu()
-        elif self.role == 'системный администратор':
-            print("Создание меню для системного администратора")  # Отладка
+        elif self.user_role == 'системный администратор':
             self.create_system_admin_menu()
-        else:
-            print(f"Неизвестная роль: {self.role}")  # Отладка для проверки непредвиденной роли
+
+        # Открываем модуль задач только один раз
+        if not self.task_view_opened:
+            print(f"Перед вызовом open_task_view: Роль: {self.user_role}, ID пользователя: {self.user_id}")
+            self.open_task_view(self.user_role, self.user_id)
 
     def update_title(self):
         """Обновляет заголовок окна с именем пользователя"""
-        self.title(f"Управление гостиницей - Вошел: {self.username}")
+        self.title(f"Hotel Management System - Вошел: {self.username}")
 
     def logout(self):
         """Диалог для выхода или смены пользователя"""
@@ -110,6 +123,7 @@ class MainApp(tk.Tk):
         else:  # Нажата кнопка "Нет" (закрыть приложение)
             self.quit()  # Закрываем приложение
 
+
     def create_manager_menu(self):
         """Создаем меню для менеджера"""
         print("Создание меню для менеджера...")  # Отладка
@@ -118,30 +132,34 @@ class MainApp(tk.Tk):
 
         # Меню "Управление номерами"
         room_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Управление номерами", menu=room_menu)
+        menubar.add_cascade(label="Номера", menu=room_menu)
         room_menu.add_command(label="Просмотр номеров", command=self.open_room_view)
 
         # Меню "Управление клиентами"
         client_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Управление клиентами", menu=client_menu)
+        menubar.add_cascade(label="Клиенты", menu=client_menu)
         client_menu.add_command(label="Просмотр клиентов", command=self.open_client_view)
 
         # Меню "Управление бронированиями"
         reservation_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Управление бронированиями", menu=reservation_menu)
-        reservation_menu.add_command(label="Управление бронированиями", command=self.open_reservation_view)
+        menubar.add_cascade(label="Бронирования", menu=reservation_menu)
+        reservation_menu.add_command(label="Бронирования", command=self.open_reservation_view)
 
-        # Меню "Управление сотрудниками"
-        print("Добавление пункта 'Управление сотрудниками' в меню")  # Отладка
+        # Меню "Управление Сотрудниками"
         employee_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Управление сотрудниками", command=self.open_employee_list_view)
-        employee_menu.add_command(label="Добавить сотрудника", command=self.open_employee_list_view)
-        employee_menu.add_command(label="Просмотр и редактирование сотрудников", command=self.open_employee_list_view)
+        menubar.add_cascade(label="Сотрудники", menu=employee_menu)
+        employee_menu.add_command(label="Просмотр сотрудников", command=self.open_employee_list_view)
+
+        # Меню "Управление задачами"
+        task_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Задачи", menu=task_menu)
+        task_menu.add_command(label="Просмотр задач", command=lambda: self.open_task_view(self.user_role, self.user_id))
 
         # Пункт "Выйти"
         menubar.add_command(label="Выйти", command=self.logout)
 
         self.update_idletasks()  # Обновляем графический интерфейс
+
 
 
 
@@ -152,18 +170,23 @@ class MainApp(tk.Tk):
 
         # Меню "Управление номерами"
         room_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Управление номерами", menu=room_menu)
+        menubar.add_cascade(label="Номера", menu=room_menu)
         room_menu.add_command(label="Просмотр номеров", command=self.open_room_view)
 
         # Меню "Управление клиентами"
         client_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Управление клиентами", menu=client_menu)
+        menubar.add_cascade(label="Клиены", menu=client_menu)
         client_menu.add_command(label="Просмотр клиентов", command=self.open_client_view)
 
         # Меню "Управление бронированиями"
         reservation_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Управление бронированиями", menu=reservation_menu)
-        reservation_menu.add_command(label="Управление бронированиями", command=self.open_reservation_view)
+        menubar.add_cascade(label="Бронирования", menu=reservation_menu)
+        reservation_menu.add_command(label="Бронирования", command=self.open_reservation_view)
+
+        # Меню "Управление задачами"
+        task_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Задачи", menu=task_menu)
+        task_menu.add_command(label="Просмотр задач", command=lambda: self.open_task_view(self.user_role, self.user_id))
 
         # Пункт "Выйти"
         menubar.add_command(label="Выйти", command=self.logout)
@@ -204,6 +227,9 @@ class MainApp(tk.Tk):
         """Очищает содержимое контейнера"""
         print("Очистка контейнера!")  # Для отладки
 
+        # Сбрасываем флаг при очистке фрейма
+        self.task_view_opened = False
+
         # Убедитесь, что контейнер существует
         if self.container is not None and self.container.winfo_exists():
             for widget in self.container.winfo_children():
@@ -229,19 +255,13 @@ class MainApp(tk.Tk):
 
 if __name__ == "__main__":
     print(f"Файл базы данных найден по пути: {DATABASE}")
-    # create_tables()
+    create_tables()
     apply_migrations()
-    # initialize_rooms()
-
-
-    # generate_clients()
-    # generate_reservations()
-
-    # # Добавляем сотрудника с проверкой уникальности username
-    # add_employee('SuperUser', 'admin', None, '+7 999 258 66 33', 'admin', '000', 'Менеджер', role='менеджер')
 
     # Запуск основного приложения
     app = MainApp()
+
+    # Запуск основного цикла приложения
     app.mainloop()
 
 

@@ -61,6 +61,8 @@ CREATE TABLE IF NOT EXISTS Сотрудники (
     Роль TEXT CHECK(Роль IN ('менеджер', 'администратор')) NOT NULL -- Роль сотрудника
 );
 
+--ALTER TABLE Задачи ADD COLUMN Тип_задачи TEXT;
+
 -- Создание таблицы задач
 CREATE TABLE IF NOT EXISTS Задачи (
     id INTEGER PRIMARY KEY AUTOINCREMENT, -- Уникальный идентификатор задачи
@@ -70,6 +72,22 @@ CREATE TABLE IF NOT EXISTS Задачи (
     Срок_исполнения DATE, -- Срок выполнения задачи (опционально)
     FOREIGN KEY (Сотрудник_id) REFERENCES Сотрудники(id) -- Связь с таблицей сотрудников
 );
+
+
+
+-- Создание таблицы История_задач
+CREATE TABLE IF NOT EXISTS История_задач (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    Задача_id INTEGER,
+    Сотрудник_id INTEGER,
+    Статус TEXT,
+    Дата_изменения DATETIME,
+    FOREIGN KEY (Задача_id) REFERENCES Задачи(id),
+    FOREIGN KEY (Сотрудник_id) REFERENCES Сотрудники(id)
+);
+
+--INSERT INTO История_задач (Задача_id, Сотрудник_id, Статус, Дата_изменения)
+--VALUES (?, ?, ?, datetime('now'))
 
 -- Создание таблицы отчетов
 CREATE TABLE IF NOT EXISTS Отчеты (

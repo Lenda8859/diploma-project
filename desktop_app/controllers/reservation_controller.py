@@ -2,7 +2,8 @@ from desktop_app.models.database_manager import add_reservation, get_all_reserva
 from tkinter import messagebox
 from desktop_app.models.status_enums import ReservationStatus, RoomStatus
 import sqlite3
-DATABASE = 'F:/hotel_management_project/hotel_management.db'
+
+DATABASE = 'F:/Hotel Management System/hotel_management.db'
 import logging
 
 

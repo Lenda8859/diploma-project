@@ -125,6 +125,7 @@ class ClientView(tk.Frame):
         self.notes_entry = tk.Entry(form_frame, textvariable=self.notes_var)
         self.notes_entry.pack(side=tk.LEFT, padx=5)
 
+
         # Создаем фрейм для кнопки
         button_frame = tk.Frame(self)
         button_frame.pack(fill=tk.X, pady=10)
@@ -280,13 +281,14 @@ class ClientView(tk.Frame):
             self.selected_client_id = client_info[0]  # ID клиента находится в первой колонке (скрытой)
 
             # Заполняем поля формы данными о выбранном клиенте
-            self.last_name_var.set(client_info[1])
-            self.name_var.set(client_info[2])
-            self.middle_name_var.set(client_info[3])
-            self.phone_var.set(client_info[4])
-            self.email_var.set(client_info[5])
-            self.address_var.set(client_info[6])
-            self.notes_var.set(client_info[7])
+            self.last_name_var.set(client_info[1])  # Фамилия
+            self.name_var.set(client_info[2])  # Имя
+            self.middle_name_var.set(client_info[3])  # Отчество
+            self.phone_var.set(client_info[4])  # Телефон
+            self.email_var.set(client_info[5])  # Email
+            self.registration_date_var.set(client_info[6])  # Дата регистрации
+            self.address_var.set(client_info[7])  # Адрес
+            self.notes_var.set(client_info[8])  # Доп. заметки
 
     def delete_client(self):
         """Удаление клиента с подтверждением"""
