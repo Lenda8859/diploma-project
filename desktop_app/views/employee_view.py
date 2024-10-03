@@ -1,6 +1,9 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-from desktop_app.models.database_manager import add_employee, get_employees_full
+from desktop_app.models.database_manager import add_employee_bd, get_employees_full
+from desktop_app.models.database_manager import update_employee_info
+import hashlib
+from desktop_app.models.database_manager import delete_employee_by_id
 
 
 class EmployeeListView(tk.Frame):
@@ -137,9 +140,12 @@ class EmployeeListView(tk.Frame):
         if not all([last_name, first_name, username, password, phone, position, role]):
             messagebox.showwarning("Ошибка", "Все поля должны быть заполнены")
             return
+        if any(len(field) == 0 for field in [last_name, first_name, username, password, phone, position, role]):
+            messagebox.showwarning("Ошибка", "Поля не должны быть пустыми")
+            return
 
         try:
-            add_employee(last_name, first_name, middle_name, phone, username, password, position, schedule, role)
+            add_employee_bd(last_name, first_name, middle_name, phone, username, password, position, schedule, role)
             messagebox.showinfo("Успех", "Сотрудник успешно добавлен")
             self.load_employees()  # Обновляем таблицу
             # Очищаем поля формы после добавления
@@ -162,11 +168,98 @@ class EmployeeListView(tk.Frame):
             messagebox.showwarning("Ошибка", "Выберите сотрудника для редактирования")
             return
 
+        # Получаем данные выбранного сотрудника из таблицы
         employee_data = self.tree.item(selected_item)["values"]
         employee_id = employee_data[0]
 
-        # TODO: Реализовать логику редактирования сотрудника (открытие окна для редактирования и сохранение изменений)
-        messagebox.showinfo("Редактировать", f"Окно редактирования сотрудника с ID {employee_id}")
+        # Создаем новое окно для редактирования
+        edit_window = tk.Toplevel(self)
+        edit_window.title("Редактирование сотрудника")
+
+        # Создаем переменные для полей ввода
+        last_name_var = tk.StringVar(value=employee_data[1])
+        first_name_var = tk.StringVar(value=employee_data[2])
+        middle_name_var = tk.StringVar(value=employee_data[3])
+        phone_var = tk.StringVar(value=employee_data[4])
+        username_var = tk.StringVar(value=employee_data[5])
+        password_var = tk.StringVar(value=employee_data[6])
+        position_var = tk.StringVar(value=employee_data[7])
+        schedule_var = tk.StringVar(value=employee_data[8])
+        role_var = tk.StringVar(value=employee_data[9])
+
+        # Создаем форму редактирования
+        tk.Label(edit_window, text="Фамилия:").grid(row=0, column=0, padx=5, pady=5, sticky=tk.W)
+        tk.Entry(edit_window, textvariable=last_name_var).grid(row=0, column=1, padx=5, pady=5)
+
+        tk.Label(edit_window, text="Имя:").grid(row=0, column=2, padx=5, pady=5, sticky=tk.W)
+        tk.Entry(edit_window, textvariable=first_name_var).grid(row=0, column=3, padx=5, pady=5)
+
+        tk.Label(edit_window, text="Отчество:").grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)
+        tk.Entry(edit_window, textvariable=middle_name_var).grid(row=1, column=1, padx=5, pady=5)
+
+        tk.Label(edit_window, text="Телефон:").grid(row=1, column=2, padx=5, pady=5, sticky=tk.W)
+        tk.Entry(edit_window, textvariable=phone_var).grid(row=1, column=3, padx=5, pady=5)
+
+        tk.Label(edit_window, text="Логин:").grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
+        tk.Entry(edit_window, textvariable=username_var).grid(row=2, column=1, padx=5, pady=5)
+
+        tk.Label(edit_window, text="Пароль:").grid(row=2, column=2, padx=5, pady=5, sticky=tk.W)
+        tk.Entry(edit_window, textvariable=password_var).grid(row=2, column=3, padx=5, pady=5)
+
+        tk.Label(edit_window, text="Должность:").grid(row=3, column=0, padx=5, pady=5, sticky=tk.W)
+        tk.Entry(edit_window, textvariable=position_var).grid(row=3, column=1, padx=5, pady=5)
+
+        tk.Label(edit_window, text="График:").grid(row=3, column=2, padx=5, pady=5, sticky=tk.W)
+        tk.Entry(edit_window, textvariable=schedule_var).grid(row=3, column=3, padx=5, pady=5)
+
+        tk.Label(edit_window, text="Роль:").grid(row=4, column=0, padx=5, pady=5, sticky=tk.W)
+        role_menu = ttk.OptionMenu(edit_window, role_var, role_var.get(), "администратор", "менеджер")
+        role_menu.grid(row=4, column=1, padx=5, pady=5)
+
+        # Функция для сохранения изменений в базу данных
+        def save_changes():
+            employee_id = employee_data[0]
+            new_last_name = last_name_var.get().strip()
+            new_first_name = first_name_var.get().strip()
+            new_middle_name = middle_name_var.get().strip()
+            new_phone = phone_var.get().strip()
+            new_username = username_var.get().strip()
+            new_password = password_var.get().strip()
+            new_position = position_var.get().strip()
+            new_schedule = schedule_var.get().strip()
+            new_role = role_var.get()
+
+            # Проверка на заполнение обязательных полей
+            if not all([employee_id, new_last_name, new_first_name, new_middle_name, new_phone,
+                        new_username, new_password, new_position, new_schedule, new_role]):
+                messagebox.showwarning("Ошибка", "Все поля должны быть заполнены")
+                return
+
+            # Хэшируем пароль только если он изменен
+            if new_password != employee_data[6]:
+                new_password = hashlib.sha256(new_password.encode()).hexdigest()
+
+            try:
+                # Сохранение изменений в базе данных
+                update_employee_info(employee_id, new_last_name, new_first_name, new_middle_name, new_phone,
+                                     new_username, new_password, new_position, new_schedule, new_role)
+
+                messagebox.showinfo("Успех", "Информация о сотруднике успешно обновлена")
+                self.load_employees()  # Обновляем таблицу после редактирования
+                edit_window.destroy()  # Закрываем окно редактирования
+
+            except Exception as e:
+                messagebox.showerror("Ошибка", f"Не удалось обновить информацию о сотруднике: {e}")
+
+        # Кнопка сохранения изменений
+        tk.Button(edit_window, text="Сохранить", command=save_changes).grid(row=5, column=0, columnspan=4, pady=10)
+
+        # Фокусируемся на новом окне редактирования
+        edit_window.transient(self)
+        edit_window.grab_set()
+        edit_window.wait_window()
+
+
 
     def delete_employee(self):
         """Удаление выбранного сотрудника"""
@@ -181,7 +274,6 @@ class EmployeeListView(tk.Frame):
         response = messagebox.askyesno("Подтверждение", "Вы уверены, что хотите удалить этого сотрудника?")
         if response:
             try:
-                from desktop_app.models.database_manager import delete_employee_by_id  # Импорт функции для удаления
                 delete_employee_by_id(employee_id)
                 messagebox.showinfo("Успех", "Сотрудник успешно удален")
                 self.load_employees()  # Обновляем таблицу после удаления

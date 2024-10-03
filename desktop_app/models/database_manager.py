@@ -328,7 +328,7 @@ def add_columns_if_not_exist():
 
 
 # Добавление сотрудника
-def add_employee(last_name, first_name, middle_name, phone, username, password, position, schedule=None, role="администратор"):
+def add_employee_bd(last_name, first_name, middle_name, phone, username, password, position, schedule=None, role="администратор"):
     """
     Добавляет нового сотрудника в базу данных.
     :param last_name: Фамилия сотрудника
@@ -371,7 +371,7 @@ def get_employees_brief(): # get_all_employees
     with sqlite3.connect(DATABASE) as conn:
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT id, Фамилия, Имя FROM Сотрудники
+            SELECT id, Фамилия, Имя, Отчество FROM Сотрудники
         """)
         employees = cursor.fetchall()
         return employees
@@ -444,13 +444,16 @@ def get_employee_by_id(employee_id):
         cursor.execute("SELECT * FROM Сотрудники WHERE id = ?", (employee_id,))
         return cursor.fetchone()
 
-def update_employee_info(employee_id, last_name, first_name, middle_name, phone, username, role):
+def update_employee_info(employee_id, new_last_name, new_first_name, new_middle_name, new_phone,
+                        new_username, new_password, new_position, new_schedule, new_role):
     """Обновляет информацию о сотруднике"""
     with sqlite3.connect(DATABASE) as conn:
         cursor = conn.cursor()
         cursor.execute("""
-            UPDATE Сотрудники SET Фамилия = ?, Имя = ?, Отчество = ?, Телефон = ?, username = ?, Роль = ? WHERE id = ?
-        """, (last_name, first_name, middle_name, phone, username, role, employee_id))
+            UPDATE Сотрудники 
+            SET Фамилия = ?, Имя = ?, Отчество = ?, Телефон = ?, username = ?, password = ?, Должность = ?, График = ?, Роль = ?
+            WHERE id = ?
+        """, (new_last_name, new_first_name, new_middle_name, new_phone, new_username, new_password, new_position, new_schedule, new_role, employee_id))
         conn.commit()
         print(f"Информация о сотруднике {employee_id} успешно обновлена.")
 
@@ -490,21 +493,22 @@ def get_employee_id_by_name(employee_name):
 
     print(f"Отформатированное имя сотрудника: {employee_name}")
 
+    # Разбиваем имя на фамилию, имя и отчество
+    parts = employee_name.split(" ")
+    print(f"Разделено на: {parts}")  # Отладочная информация
+
+    # Проверка корректности разделения
+    if len(parts) != 3:
+        print("Некорректный формат имени: ожидалось три части (фамилия, имя, отчество)")
+        return None
+
+    last_name, first_name, middle_name = parts  # Фамилия, имя и отчество
+
     with sqlite3.connect(DATABASE) as conn:
         cursor = conn.cursor()
-        # Разбиваем имя на фамилию и имя (и возможные дополнительные части)
-        parts = employee_name.split(" ", 1)  # Разделяем только по первому пробелу
-        print(f"Разделено на: {parts}")  # Отладочная информация
-
-        if len(parts) != 2:
-            # Если формат имени не соответствует ожидаемому, возвращаем None
-            print("Некорректный формат имени")
-            return None
-
-        last_name, first_name = parts  # Фамилия и оставшаяся часть имени
         cursor.execute("""
-            SELECT id FROM Сотрудники WHERE Фамилия = ? AND Имя = ?
-        """, (last_name, first_name))
+            SELECT id FROM Сотрудники WHERE Фамилия = ? AND Имя = ? AND Отчество = ?
+        """, (last_name, first_name, middle_name))
         result = cursor.fetchone()
         print(f"Найден результат: {result}")  # Отладочная информация
 
@@ -523,16 +527,6 @@ def add_task(task_type, employee_id, description, status, due_date):
         """, (task_type, employee_id, description, status, due_date))
         conn.commit()
 
-# # Получение всех задач
-# def get_all_tasks():
-#     with sqlite3.connect(DATABASE) as conn:
-#         cursor = conn.cursor()
-#         cursor.execute("""
-#             SELECT id, Описание, Сотрудник_id, Статус, Срок_исполнения FROM Задачи
-#         """)
-#         tasks = cursor.fetchall()
-#         print(tasks)  # Временно выводим данные в консоль для проверки
-#         return tasks
 
 def get_all_tasks():
     with sqlite3.connect(DATABASE) as conn:
@@ -540,9 +534,11 @@ def get_all_tasks():
         cursor.execute("""
             SELECT
                 Задачи.id,
-                Задачи.Тип_задачи,  -- Новый столбец Тип_задачи
+                Задачи.Тип_задачи,
                 Задачи.Описание,
-                Сотрудники.Фамилия || ' ' || Сотрудники.Имя AS Сотрудник,
+                Сотрудники.Фамилия,
+                Сотрудники.Имя,
+                Сотрудники.Отчество,  -- Включить отчество сотрудника
                 Задачи.Статус,
                 Задачи.Срок_исполнения
             FROM Задачи
@@ -584,17 +580,22 @@ def delete_task_bd(task_id):
         print(f"Ошибка при удалении задачи: {e}")
         raise e  # Поднять ошибку для обработки в вызывающей функции
 
-def get_filtered_tasks(employee_id=None, status=None, start_date=None, end_date=None):
+
+def get_filtered_tasks(employee=None, status=None, start_date=None, end_date=None, task_type=None):
     query = "SELECT * FROM Задачи WHERE 1=1"
     params = []
 
-    if employee_id:
+    if employee:
         query += " AND Сотрудник_id = ?"
-        params.append(employee_id)
+        params.append(employee.split("(")[-1].replace(")", ""))  # Извлечение ID сотрудника из строки
 
     if status:
         query += " AND Статус = ?"
         params.append(status)
+
+    if task_type:
+        query += " AND Тип_задачи = ?"
+        params.append(task_type)
 
     if start_date and end_date:
         query += " AND Дата_создания BETWEEN ? AND ?"
@@ -636,6 +637,17 @@ def get_filtered_tasks(employee=None, status=None, start_date=None, end_date=Non
         cursor.execute(query, params)
         return cursor.fetchall()
 
+def update_task_details(task_id, task_type, employee_id, description, status, due_date):
+    """Обновляет все данные задачи по ID"""
+    with sqlite3.connect(DATABASE) as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE Задачи
+            SET Тип_задачи = ?, Сотрудник_id = ?, Описание = ?, Статус = ?, Срок_исполнения = ?
+            WHERE id = ?
+        """, (task_type, employee_id, description, status, due_date, task_id))
+        conn.commit()
+
 
 ##*********************************************  Отчеты  ***************************************************************##
 
@@ -657,6 +669,64 @@ def get_all_reports():
         cursor.execute("SELECT * FROM Отчеты")
         reports = cursor.fetchall()
         return reports
+
+
+def get_daily_room_status(start_date, end_date):
+    """Получение данных о статусах номеров за указанный период по дням"""
+    with sqlite3.connect(DATABASE) as conn:
+        cursor = conn.cursor()
+
+        # Получаем все номера отеля
+        cursor.execute("SELECT Номер_комнаты FROM Номера")
+        room_numbers = [row[0] for row in cursor.fetchall()]
+        total_rooms = len(room_numbers)  # Общее количество комнат в отеле
+
+        # Запрос для получения занятых и свободных номеров на каждый день
+        cursor.execute("""
+            SELECT
+                date(Дата_заезда) AS date,
+                SUM(CASE WHEN Статус_бронирования IN ('Заезд', 'Подтверждено') THEN 1 ELSE 0 END) AS занятые,
+                SUM(CASE WHEN Статус_бронирования = 'Выезд' THEN 1 ELSE 0 END) AS на_обслуживании
+            FROM Бронирования
+            WHERE date(Дата_заезда) BETWEEN ? AND ?
+            GROUP BY date(Дата_заезда)
+        """, (start_date, end_date))
+
+        result = cursor.fetchall()
+
+        # Отладочный вывод для всех строк
+        for row in result:
+            print(f"Row: {row}, Length: {len(row)}")
+
+        report_data = []
+
+        for row in result:
+            # Проверяем, что в строке ровно три значения
+            if len(row) == 3:
+                date, occupied, service = row
+
+                free_rooms = total_rooms - occupied - service
+                load_percentage = (occupied / total_rooms) * 100 if total_rooms > 0 else 0
+
+                # Добавляем отладочные сообщения
+                print(
+                    f"Дата: {date}, Занятые: {occupied}, На обслуживании: {service}, Свободные: {free_rooms}, Загрузка: {load_percentage:.2f}%")
+
+                report_data.append((date, free_rooms, occupied, service, f"{load_percentage:.2f}%"))
+            else:
+                # Логируем ошибку, если количество значений не совпадает
+                print(f"Ошибка данных: ожидалось 3 значения, но получено {len(row)} - {row}")
+
+        # Проверка данных после заполнения report_data
+        for row in report_data:
+            print(f"Отчет: {row}")
+            # Распаковка должна совпадать с количеством значений в report_data (ожидается 5)
+            if len(row) == 5:
+                date, free_rooms, occupied, service, load_percentage = row
+            else:
+                print(f"Неверное количество значений: {row}")
+
+        return report_data
 
 ##**********************************************  Логтрование  **********************************************************##
 

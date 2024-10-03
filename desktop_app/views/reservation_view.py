@@ -189,23 +189,23 @@ class ReservationView(tk.Frame):
 
                 # Если статус комнаты не «свободно», она занята, забронирована или на обслуживании
                 if room_status in ['забронировано', 'занято', 'на обслуживании']:
-                    print(f"Отладка: Комната {room_number} недоступна для нового бронирования, статус: {room_status}")
+                    #print(f"Отладка: Комната {room_number} недоступна для нового бронирования, статус: {room_status}")
                     return False
-                print(f"Отладка: Комната {room_number} доступна для бронирования, статус: {room_status}")
+                #print(f"Отладка: Комната {room_number} доступна для бронирования, статус: {room_status}")
                 return True
         except Exception as e:
-            print(f"Ошибка при проверке доступности комнаты: {e}")
+            #print(f"Ошибка при проверке доступности комнаты: {e}")
             return False
 
 
     def handle_create_reservation(self):
         """Создание нового бронирования на основе данных из интерфейса"""
         client_name = self.client_name_var.get().strip()
-        print(f"Отладка: Выбранный клиент - {client_name}")
+        #print(f"Отладка: Выбранный клиент - {client_name}")
 
         # Получаем ID клиента по имени
         client_id = self.client_dict.get(client_name)
-        print(f"Отладка: Найденный ID клиента - {client_id}")
+        #print(f"Отладка: Найденный ID клиента - {client_id}")
 
         if not client_id:
             print("Ошибка: Клиент не найден.")
@@ -216,20 +216,20 @@ class ReservationView(tk.Frame):
             # Преобразуем даты из интерфейса в формат "YYYY-MM-DD"
             check_in_date = datetime.strptime(self.check_in_date_var.get(), "%d/%m/%Y").strftime("%Y-%m-%d")
             check_out_date = datetime.strptime(self.check_out_date_var.get(), "%d/%m/%Y").strftime("%Y-%m-%d")
-            print(f"Отладка: Дата заезда - {check_in_date}, Дата выезда - {check_out_date}")
+            #print(f"Отладка: Дата заезда - {check_in_date}, Дата выезда - {check_out_date}")
         except ValueError:
-            print("Ошибка: Неверный формат даты.")
+            #print("Ошибка: Неверный формат даты.")
             messagebox.showerror("Ошибка", "Неверный формат даты. Используйте формат ДД-ММ-ГГГГ.")
             return
 
         room_id = self.room_id_var.get()  # Получаем номер комнаты из интерфейса
-        print(f"Отладка: Выбранный номер комнаты - {room_id}")
+        #print(f"Отладка: Выбранный номер комнаты - {room_id}")
         reservation_status = self.reservation_status_var.get()  # Статус бронирования
         payment_status = self.payment_status_var.get()  # Статус оплаты
         payment_method = self.payment_method_var.get()  # Способ оплаты
         notes = self.notes_var.get()  # Примечания
 
-        print(f"Отладка: Статус бронирования - {reservation_status}, Статус оплаты - {payment_status}")
+        #print(f"Отладка: Статус бронирования - {reservation_status}, Статус оплаты - {payment_status}")
 
         # Проверка, можно ли забронировать номер
         if not self.is_room_available(room_id):
@@ -252,7 +252,7 @@ class ReservationView(tk.Frame):
             # Извлекаем ID клиента через словарь self.client_dict
             client_name = selected_client.strip()
             client_id = self.client_dict.get(client_name)
-            print(f"Отладка: Выбран клиент {client_name}, ID: {client_id}")
+            #print(f"Отладка: Выбран клиент {client_name}, ID: {client_id}")
 
             # Проверяем, что ID клиента найден
             if client_id:
@@ -274,13 +274,6 @@ class ReservationView(tk.Frame):
         update_button = tk.Button(button_frame, text="Обновить статус", command=self.update_reservation)
         update_button.pack(side=tk.LEFT, padx=5)
 
-        # # Кнопка для заезда
-        # check_in_button = tk.Button(button_frame, text="Заезд", command=self.check_in)
-        # check_in_button.pack(side=tk.LEFT, padx=5)
-        #
-        # # Кнопка для выезда
-        # check_out_button = tk.Button(button_frame, text="Выезд", command=self.check_out)
-        # check_out_button.pack(side=tk.LEFT, padx=5)
 
         # Кнопка для удаления бронирования
         delete_button = tk.Button(button_frame, text="Удалить бронирование", command=self.get_delete_reservation)
@@ -339,8 +332,38 @@ class ReservationView(tk.Frame):
             client = cursor.fetchone()
             return f"{client[0]} {client[1]}" if client else "Неизвестный клиент"
 
+    # def update_reservation(self):
+    #     """Обновление статуса бронирования"""
+    #     selected_item = self.reservation_treeview.selection()
+    #     if not selected_item:
+    #         messagebox.showwarning("Ошибка", "Выберите бронирование для изменения статуса.")
+    #         return
+    #
+    #     reservation_id = self.reservation_treeview.item(selected_item)["values"][0]
+    #     new_status_str = self.reservation_status_var.get()  # Получаем строку статуса
+    #
+    #     try:
+    #         # Преобразуем строковый статус в объект ReservationStatus
+    #         new_status = ReservationStatus[new_status_str.upper()]
+    #     except KeyError:
+    #         messagebox.showerror("Ошибка", f"Неверный статус бронирования: {new_status_str}")
+    #         return
+    #
+    #     payment_status = self.payment_status_var.get() if self.payment_status_var.get() else None
+    #     payment_method = self.payment_method_var.get() if self.payment_method_var.get() else None
+    #
+    #     if not new_status:
+    #         messagebox.showwarning("Ошибка", "Выберите новый статус для бронирования.")
+    #         return
+    #
+    #     # Вызываем функцию обновления статусов
+    #     update_statuses(reservation_id, new_status, room_number=self.room_id_var.get(), payment_status=payment_status,
+    #                     payment_method=payment_method)
+    #
+    #     self.load_reservations()
+
     def update_reservation(self):
-        """Обновление статуса бронирования"""
+        """Обновление статуса бронирования и дат"""
         selected_item = self.reservation_treeview.selection()
         if not selected_item:
             messagebox.showwarning("Ошибка", "Выберите бронирование для изменения статуса.")
@@ -363,9 +386,17 @@ class ReservationView(tk.Frame):
             messagebox.showwarning("Ошибка", "Выберите новый статус для бронирования.")
             return
 
-        # Вызываем функцию обновления статусов
+        # Получаем даты заезда и выезда из интерфейса
+        try:
+            check_in_date = datetime.strptime(self.check_in_date_var.get(), "%d/%m/%Y").strftime("%Y-%m-%d")
+            check_out_date = datetime.strptime(self.check_out_date_var.get(), "%d/%m/%Y").strftime("%Y-%m-%d")
+        except ValueError:
+            messagebox.showerror("Ошибка", "Неверный формат даты. Используйте формат ДД-ММ-ГГГГ.")
+            return
+
+        # Вызываем функцию обновления статусов и дат
         update_statuses(reservation_id, new_status, room_number=self.room_id_var.get(), payment_status=payment_status,
-                        payment_method=payment_method)
+                        payment_method=payment_method, check_in_date=check_in_date, check_out_date=check_out_date)
 
         self.load_reservations()
 
@@ -391,10 +422,10 @@ class ReservationView(tk.Frame):
         room_number = self.reservation_treeview.item(selected_item)["values"][4]  # Номер комнаты
 
         # Отладочное сообщение для проверки данных
-        print(f"Отладка: Заезд для бронирования ID {reservation_id}, номер комнаты {room_number}")
+        #print(f"Отладка: Заезд для бронирования ID {reservation_id}, номер комнаты {room_number}")
 
         if room_number == 0:
-            print("Ошибка: Номер комнаты установлен в 0, что недопустимо.")
+            #print("Ошибка: Номер комнаты установлен в 0, что недопустимо.")
             return
 
         res_check_in(reservation_id, room_number)  # Передаем reservation_id и room_number
@@ -411,10 +442,10 @@ class ReservationView(tk.Frame):
         room_number = self.reservation_treeview.item(selected_item)["values"][4]  # Номер комнаты
 
         # Отладочное сообщение для проверки данных
-        print(f"Отладка: Выезд для бронирования ID {reservation_id}, номер комнаты {room_number}")
+        #print(f"Отладка: Выезд для бронирования ID {reservation_id}, номер комнаты {room_number}")
 
         if room_number == 0:
-            print("Ошибка: Номер комнаты установлен в 0, что недопустимо.")
+            #print("Ошибка: Номер комнаты установлен в 0, что недопустимо.")
             return
 
         res_check_out(reservation_id, room_number)  # Передаем reservation_id и room_number
