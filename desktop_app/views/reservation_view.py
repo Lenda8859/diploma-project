@@ -12,6 +12,7 @@ DATABASE = 'F:/Hotel Management System/hotel_management.db'
 class ReservationView(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
+        self.parent = parent
 
         # Словарь для хранения связи между ФИО клиента и его ID
         self.client_dict = {}
@@ -21,6 +22,16 @@ class ReservationView(tk.Frame):
         self.reservation_treeview = ttk.Treeview(self, columns=(
             "ID", "ФИО_клиента", "Дата_заезда", "Дата_выезда", "Номер_комнаты", "Статус_бронирования",
             "Статус_оплаты", "Способ_оплаты", "Примечания", "Дата создания"), show="headings")
+
+        # Изменяем цвет основного окна
+        self.parent.configure(bg="#e6e6e6")
+
+        # Настройка стиля заголовка
+        style = ttk.Style()
+        style.configure("Treeview.Heading", background="#c0c0c0", foreground="black", font=("Arial", 10, "bold"))
+
+        # Изменяем цвет фона самого фрейма
+        self.configure(bg="#e6e6e6")
 
         # Устанавливаем заголовки для столбцов
         self.reservation_treeview.heading("ID", text="ID")
@@ -75,6 +86,7 @@ class ReservationView(tk.Frame):
         form_frame = tk.Frame(self)
         form_frame.pack(fill=tk.X, pady=10)
 
+
         tk.Label(form_frame, text="Дата заезда").pack(side=tk.LEFT, padx=5)
         self.check_in_date_var = DateEntry(form_frame, date_pattern='dd/mm/yyyy')
         self.check_in_date_var.pack(side=tk.LEFT, padx=5)
@@ -128,9 +140,17 @@ class ReservationView(tk.Frame):
         search_button = tk.Button(search_frame, text="Поиск клиента", command=self.search_client)
         search_button.pack(side=tk.LEFT, padx=5)
 
-        # Listbox для отображения результатов поиска клиентов
-        self.client_listbox = tk.Listbox(self)
-        self.client_listbox.pack(fill=tk.BOTH, expand=True)
+        # Устанавливаем фиксированный размер для Listbox
+        listbox_frame = tk.Frame(self)
+        listbox_frame.pack(fill=tk.X, padx=5, pady=5)
+
+        self.client_listbox = tk.Listbox(listbox_frame, height=4, width=120)
+        self.client_listbox.grid(row=0, column=0, sticky="nsw")  # Используем grid для более точного контроля
+
+        scrollbar = tk.Scrollbar(listbox_frame, orient="vertical", command=self.client_listbox.yview)
+        scrollbar.grid(row=0, column=1, sticky="ns")
+
+        self.client_listbox.configure(yscrollcommand=scrollbar.set)
         self.client_listbox.bind('<<ListboxSelect>>', self.on_client_select)
 
     def search_client(self):
@@ -167,13 +187,16 @@ class ReservationView(tk.Frame):
 
         # Отображение найденных клиентов в Listbox
         if clients:
-            for client in clients:
+            for index, client in enumerate(clients):
                 # Формируем полное имя клиента
                 full_name = f"{client[1]} {client[2]} {client[3]}"
                 # Добавляем клиента в Listbox
                 self.client_listbox.insert(tk.END, full_name)
                 # Связываем полное имя с его client_id
                 self.client_dict[full_name] = client[0]
+
+                color = '#f0f0f0' if index % 2 == 0 else '#d9d9d9'
+                self.client_listbox.itemconfig(index, bg=color)
         else:
             messagebox.showwarning("Результат", "Клиенты не найдены.")
 
@@ -266,17 +289,21 @@ class ReservationView(tk.Frame):
         button_frame = tk.Frame(self)
         button_frame.pack(fill=tk.X, pady=10)
 
+        button_style = {'bg': '#c0c0c0', 'activebackground': '#c0c0c0'}
+
         # Кнопка для создания бронирования
-        add_button = tk.Button(button_frame, text="Создать бронирование", command=self.handle_create_reservation)
+        add_button = tk.Button(button_frame, text="Создать бронирование", command=self.handle_create_reservation,
+                               **button_style)
         add_button.pack(side=tk.LEFT, padx=5)
 
         # Кнопка для обновления статуса бронирования
-        update_button = tk.Button(button_frame, text="Обновить статус", command=self.update_reservation)
+        update_button = tk.Button(button_frame, text="Обновить статус", command=self.update_reservation, **button_style)
         update_button.pack(side=tk.LEFT, padx=5)
 
 
         # Кнопка для удаления бронирования
-        delete_button = tk.Button(button_frame, text="Удалить бронирование", command=self.get_delete_reservation)
+        delete_button = tk.Button(button_frame, text="Удалить бронирование", command=self.get_delete_reservation,
+                                  **button_style)
         delete_button.pack(side=tk.LEFT, padx=5)
 
     def load_reservations(self):
@@ -299,8 +326,12 @@ class ReservationView(tk.Frame):
         # Очищаем таблицу перед загрузкой данных
         self.reservation_treeview.delete(*self.reservation_treeview.get_children())
 
+        # Настраиваем стили для чередующихся строк
+        self.reservation_treeview.tag_configure('row_even', background='#f0f0f0')
+        self.reservation_treeview.tag_configure('row_odd', background='#d9d9d9')
+
         # Отображаем бронирования с ФИО клиента
-        for reservation in reservations:
+        for index, reservation in enumerate(reservations):
             # Формируем строку ФИО клиента
             client_name = f"{reservation[1]} {reservation[2]} {reservation[3]}"
 
@@ -316,11 +347,15 @@ class ReservationView(tk.Frame):
                 # Если времени нет, то просто отображаем дату
                 date_created = datetime.strptime(reservation[11], "%Y-%m-%d").strftime("%d/%m/%Y")
 
-            # Добавляем данные в таблицу
+            # Определяем тег строки для чередования цветов
+            tag = 'row_even' if index % 2 == 0 else 'row_odd'
+
+            # Добавляем данные в таблицу с соответствующим тегом
             self.reservation_treeview.insert("", tk.END, values=(
                 reservation[0], client_name, formatted_check_in, formatted_check_out, reservation[6],
                 reservation[7], reservation[8], reservation[9], reservation[10], date_created
-            ))
+            ), tags=(tag,))
+
 
 
 
@@ -332,35 +367,7 @@ class ReservationView(tk.Frame):
             client = cursor.fetchone()
             return f"{client[0]} {client[1]}" if client else "Неизвестный клиент"
 
-    # def update_reservation(self):
-    #     """Обновление статуса бронирования"""
-    #     selected_item = self.reservation_treeview.selection()
-    #     if not selected_item:
-    #         messagebox.showwarning("Ошибка", "Выберите бронирование для изменения статуса.")
-    #         return
-    #
-    #     reservation_id = self.reservation_treeview.item(selected_item)["values"][0]
-    #     new_status_str = self.reservation_status_var.get()  # Получаем строку статуса
-    #
-    #     try:
-    #         # Преобразуем строковый статус в объект ReservationStatus
-    #         new_status = ReservationStatus[new_status_str.upper()]
-    #     except KeyError:
-    #         messagebox.showerror("Ошибка", f"Неверный статус бронирования: {new_status_str}")
-    #         return
-    #
-    #     payment_status = self.payment_status_var.get() if self.payment_status_var.get() else None
-    #     payment_method = self.payment_method_var.get() if self.payment_method_var.get() else None
-    #
-    #     if not new_status:
-    #         messagebox.showwarning("Ошибка", "Выберите новый статус для бронирования.")
-    #         return
-    #
-    #     # Вызываем функцию обновления статусов
-    #     update_statuses(reservation_id, new_status, room_number=self.room_id_var.get(), payment_status=payment_status,
-    #                     payment_method=payment_method)
-    #
-    #     self.load_reservations()
+
 
     def update_reservation(self):
         """Обновление статуса бронирования и дат"""
@@ -466,6 +473,14 @@ class ReservationView(tk.Frame):
             self.payment_status_var.set(reservation_info[6])  # Статус оплаты
             self.payment_method_var.set(reservation_info[7])  # Способ оплаты
             self.notes_var.set(reservation_info[8])  # Примечания
+
+    def on_client_click(self, event):
+        """Обработчик клика мыши по элементу в Listbox"""
+        selection = self.client_listbox.curselection()
+        if selection:
+            index = selection[0]
+            selected_client = self.client_listbox.get(index)
+            messagebox.showinfo("Клиент выбран", f"Выбран клиент: {selected_client}")
 
 
 

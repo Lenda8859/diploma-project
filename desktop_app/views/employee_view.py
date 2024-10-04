@@ -13,7 +13,7 @@ class EmployeeListView(tk.Frame):
         self.pack(padx=20, pady=20, fill=tk.BOTH, expand=True)
 
         # Фрейм для таблицы
-        table_frame = tk.Frame(self)
+        table_frame = tk.Frame(self, bg="#e6e6e6")
         table_frame.pack(fill=tk.BOTH, expand=True)
 
         # Создаем таблицу сотрудников
@@ -22,6 +22,17 @@ class EmployeeListView(tk.Frame):
             columns=("ID", "Фамилия", "Имя", "Отчество", "Телефон", "Логин", "Пароль", "Должность", "График", "Роль"),
             show="headings"
         )
+
+        # Изменяем цвет основного окна
+        self.parent.configure(bg="#e6e6e6")
+
+        # Настройка стиля заголовка
+        style = ttk.Style()
+        style.configure("Treeview.Heading", background="#c0c0c0", foreground="black", font=("Arial", 10, "bold"))
+
+        # Изменяем цвет фона самого фрейма
+        self.configure(bg="#e6e6e6")
+
 
         # Определение заголовков
         self.tree.heading("ID", text="ID")
@@ -57,9 +68,12 @@ class EmployeeListView(tk.Frame):
         button_frame = tk.Frame(self)
         button_frame.pack(pady=10)
 
-        tk.Button(button_frame, text="Обновить", command=self.load_employees).pack(side=tk.LEFT, padx=5)
-        tk.Button(button_frame, text="Редактировать", command=self.edit_employee).pack(side=tk.LEFT, padx=5)
-        tk.Button(button_frame, text="Удалить", command=self.delete_employee).pack(side=tk.LEFT, padx=5)
+
+
+        tk.Button(button_frame, text="Обновить", command=self.load_employees, bg="#c0c0c0").pack(side=tk.LEFT, padx=5)
+        tk.Button(button_frame, text="Редактировать", command=self.edit_employee, bg="#c0c0c0").pack(side=tk.LEFT,
+                                                                                                     padx=5)
+        tk.Button(button_frame, text="Удалить", command=self.delete_employee, bg="#c0c0c0").pack(side=tk.LEFT, padx=5)
 
         # Загрузка данных в таблицу
         self.load_employees()
@@ -70,8 +84,9 @@ class EmployeeListView(tk.Frame):
 
     def create_employee_form(self):
         """Создает форму для добавления нового сотрудника"""
-        form_frame = tk.Frame(self)
+        form_frame = tk.Frame(self, bg="#e6e6e6")
         form_frame.pack(pady=20, fill=tk.X)
+
 
         self.last_name_var = tk.StringVar()
         self.first_name_var = tk.StringVar()
@@ -112,7 +127,7 @@ class EmployeeListView(tk.Frame):
         role_menu.grid(row=4, column=1, padx=5, pady=5)
 
         # Кнопка добавления сотрудника
-        tk.Button(form_frame, text="Добавить сотрудника", command=self.add_employee).grid(row=5, column=0, columnspan=4,
+        tk.Button(form_frame, text="Добавить сотрудника", command=self.add_employee, bg="#c0c0c0").grid(row=5, column=0, columnspan=4,
                                                                                           pady=10)
 
     def load_employees(self):
@@ -120,10 +135,16 @@ class EmployeeListView(tk.Frame):
         self.tree.delete(*self.tree.get_children())  # Очищаем текущие данные в таблице
 
         employees = get_employees_full()
-        for emp in employees:
+        for index, emp in enumerate(employees):
             # ID, Фамилия, Имя, Отчество, Телефон, Логин, Пароль, Должность, График, Роль
+            row_color = "#f0f0f0" if index % 2 == 0 else "#d9d9d9"
             self.tree.insert("", "end",
-                             values=(emp[0], emp[1], emp[2], emp[3], emp[4], emp[5], emp[6], emp[7], emp[8], emp[9]))
+                             values=(emp[0], emp[1], emp[2], emp[3], emp[4], emp[5], emp[6], emp[7], emp[8], emp[9]),
+                             tags=(row_color,))
+
+        # Устанавливаем цвет для строк
+        self.tree.tag_configure("#f0f0f0", background="#f0f0f0")
+        self.tree.tag_configure("#d9d9d9", background="#d9d9d9")
 
     def add_employee(self):
         """Добавляет нового сотрудника в базу данных и обновляет таблицу"""

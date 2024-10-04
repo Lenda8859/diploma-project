@@ -9,7 +9,7 @@ import re
 
 class ClientView(tk.Frame):
     def __init__(self, parent):
-        super().__init__(parent)
+        super().__init__(parent,  bg="#e6e6e6")
 
         # Создаем таблицу (Treeview) для отображения клиентов
         self.client_tree = ttk.Treeview(self, columns=(
@@ -42,6 +42,7 @@ class ClientView(tk.Frame):
 
 
         # Инициализация переменных
+        self.registration_date_var = tk.StringVar(value=self.get_current_date())
         self.last_name_var = tk.StringVar()
         self.name_var = tk.StringVar()
         self.middle_name_var = tk.StringVar()  # Отчество
@@ -63,14 +64,16 @@ class ClientView(tk.Frame):
         self.load_clients()
         self.create_form()
         # Поле для поиска клиента
-        self.create_search_bar()
+        #self.create_search_bar()
         self.create_action_buttons()
         self.client_tree.bind("<<TreeviewSelect>>", self.on_client_select)
 
+        self.load_clients()
+        self.apply_treeview_style()
 
     def create_form(self):
         """Форма для добавления/редактирования клиента"""
-        form_frame = tk.Frame(self)
+        form_frame = tk.Frame(self, bg="#e6e6e6")
         form_frame.pack(fill=tk.X, pady=10)
 
         # Поле для ввода фамилии
@@ -96,27 +99,22 @@ class ClientView(tk.Frame):
         # Привязываем событие на изменение текста в поле для ввода телефона
         self.phone_var.trace_add("write", self.check_phone_format)
 
-
         # Поле для предупреждений
         self.phone_warning_label.pack()
-
 
         # Второй ряд: Электронная почта, Дата регистрации, Адрес, Дополнительные заметки
         row2_frame = tk.Frame(self)
         row2_frame.pack(fill=tk.X, pady=10)
 
         tk.Label(row2_frame, text="Email").pack(side=tk.LEFT, padx=5)
-        self.email_var = tk.StringVar()
         self.email_entry = tk.Entry(row2_frame, textvariable=self.email_var)
         self.email_entry.pack(side=tk.LEFT, padx=5)
 
         tk.Label(row2_frame, text="Дата регистрации клиента").pack(side=tk.LEFT, padx=5)
-        self.registration_date_var = tk.StringVar(value=self.get_current_date())
         self.registration_date_entry = tk.Entry(row2_frame, textvariable=self.registration_date_var, state='readonly')
         self.registration_date_entry.pack(side=tk.LEFT, padx=5)
 
         tk.Label(row2_frame, text="Адрес").pack(side=tk.LEFT, padx=5)
-        self.address_var = tk.StringVar()
         self.address_entry = tk.Entry(row2_frame, textvariable=self.address_var)
         self.address_entry.pack(side=tk.LEFT, padx=5)
 
@@ -125,14 +123,11 @@ class ClientView(tk.Frame):
         self.notes_entry = tk.Entry(form_frame, textvariable=self.notes_var)
         self.notes_entry.pack(side=tk.LEFT, padx=5)
 
-
-        # Создаем фрейм для кнопки
-        button_frame = tk.Frame(self)
-        button_frame.pack(fill=tk.X, pady=10)
-
-        # Кнопка для добавления клиента
-        add_button = tk.Button(button_frame, text="Добавить клиента", command=self.add_client)
-        add_button.pack(side=tk.LEFT, padx=10, pady=10)
+        # Поле для поиска клиента (справа от Доп. заметки)
+        tk.Label(form_frame, text="Поиск клиента").pack(side=tk.LEFT, padx=5)
+        search_entry = tk.Entry(form_frame, textvariable=self.search_var, width=40)  # Уменьшите ширину до 30
+        search_entry.pack(side=tk.LEFT, padx=5)
+        search_entry.bind("<KeyRelease>", self.search_clients)
 
     def add_client(self):
         """Добавление нового клиента"""
@@ -178,28 +173,34 @@ class ClientView(tk.Frame):
         else:
             self.phone_warning_label.config(text="Неверный формат телефона! Пример: +7 xxx xxx xx xx")
 
-    def create_search_bar(self):
-        """Поле для поиска клиента"""
-        search_frame = tk.Frame(self)
-        search_frame.pack(fill=tk.X, pady=3)
-
-        tk.Label(search_frame, text="Поиск клиента").pack(side=tk.LEFT, padx=5)
-        search_entry = tk.Entry(search_frame, textvariable=self.search_var, width=30)  # Уменьшите ширину до 30
-        search_entry.pack(side=tk.LEFT, padx=5)
-        search_entry.bind("<KeyRelease>", self.search_clients)
+    # def create_search_bar(self):
+    #     """Поле для поиска клиента"""
+    #     search_frame = tk.Frame(self)
+    #     search_frame.pack(fill=tk.X, pady=3)
+    #
+    #     tk.Label(search_frame, text="Поиск клиента").pack(side=tk.LEFT, padx=5)
+    #     search_entry = tk.Entry(search_frame, textvariable=self.search_var, width=30)  # Уменьшите ширину до 30
+    #     search_entry.pack(side=tk.LEFT, padx=5)
+    #     search_entry.bind("<KeyRelease>", self.search_clients)
 
     def create_action_buttons(self):
-        """Кнопки для удаления и изменения клиента"""
+        """Кнопки для добавления, удаления и изменения клиента"""
+        button_style = {'bg': '#c0c0c0', 'activebackground': '#c0c0c0'}
+
         button_frame = tk.Frame(self)
         button_frame.pack(fill=tk.X, pady=10)
 
-        # Кнопка для удаления клиента
-        delete_button = tk.Button(button_frame, text="Удалить клиента", command=self.delete_client)
-        delete_button.pack(side=tk.LEFT, padx=10, pady=5)
+        # Кнопка для добавления клиента
+        add_button = tk.Button(button_frame, text="Добавить клиента", command=self.add_client, **button_style)
+        add_button.pack(side=tk.LEFT, padx=10, pady=10)
 
-        # Кнопка для изменения клиента
-        update_button = tk.Button(button_frame, text="Изменить клиента", command=self.update_client)
-        update_button.pack(side=tk.LEFT, padx=10, pady=5)
+        # Кнопка для удаления клиента (справа от кнопки добавления)
+        delete_button = tk.Button(button_frame, text="Удалить клиента", command=self.delete_client, **button_style)
+        delete_button.pack(side=tk.LEFT, padx=10, pady=10)
+
+        # Кнопка для изменения клиента (справа от кнопки удаления)
+        update_button = tk.Button(button_frame, text="Изменить клиента", command=self.update_client, **button_style)
+        update_button.pack(side=tk.LEFT, padx=10, pady=10)
 
     def load_clients(self):
         """Загрузка всех клиентов в словарь для использования при создании бронирований"""
@@ -216,7 +217,8 @@ class ClientView(tk.Frame):
         self.client_dict = {f"{client[1]} {client[2]} {client[3]}".strip(): client[0] for client in clients}
 
         # Заполняем таблицу клиентов
-        for client in clients:
+        for index, client in enumerate(clients):
+            tag = 'evenrow' if index % 2 == 0 else 'oddrow'
             self.client_tree.insert("", tk.END, values=(
                 client[0],  # ID
                 client[1],  # Фамилия
@@ -227,7 +229,7 @@ class ClientView(tk.Frame):
                 client[6],  # Дата регистрации
                 client[7],  # Адрес
                 client[8]  # Доп.инфо
-            ))
+            ), tags=(tag,))
 
         print(f"Отладка: Словарь клиентов: {self.client_dict}")
 
@@ -348,7 +350,7 @@ class ClientView(tk.Frame):
     def get_current_date(self):
         """Возвращает текущую дату в формате YYYY-MM-DD"""
         from datetime import datetime
-        return datetime.now().strftime("%Y-%m-%d")
+        return datetime.now().strftime("%d.%m.%y") # %d.%m.%y %Y-%m-%d
 
     def clear_form(self):
         """Очистка полей формы"""
@@ -359,3 +361,12 @@ class ClientView(tk.Frame):
         self.email_var.set("")
         self.address_var.set("")
         self.notes_var.set("")
+
+    def apply_treeview_style(self):
+        """Применение стиля к строкам Treeview для чередования цветов."""
+        for index, item in enumerate(self.client_tree.get_children()):
+            color = '#f0f0f0' if index % 2 == 0 else '#d9d9d9'
+            self.client_tree.tag_configure('evenrow', background='#f0f0f0')
+            self.client_tree.tag_configure('oddrow', background='#d9d9d9')
+            tag = 'evenrow' if index % 2 == 0 else 'oddrow'
+            self.client_tree.item(item, tags=(tag,))

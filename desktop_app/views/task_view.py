@@ -12,6 +12,7 @@ from desktop_app.models.database_manager import update_task_details
 class TaskView(tk.Frame):
     def __init__(self, parent, user_role, user_id=None):
         super().__init__(parent)
+        self.parent = parent
         print("Инициализация TaskView")
 
         # Сохраняем user_role и user_id как атрибуты класса
@@ -22,6 +23,16 @@ class TaskView(tk.Frame):
         self.task_tree = ttk.Treeview(self, columns=(
             "ID", "Тип задачи", "Описание", "Исполнитель", "Срок", "Статус"), show="headings")
         self.task_tree.pack(fill=tk.BOTH, expand=True)
+
+        # Изменяем цвет основного окна
+        self.parent.configure(bg="#e6e6e6")
+
+        # Настройка стиля заголовка
+        style = ttk.Style()
+        style.configure("Treeview.Heading", background="#c0c0c0", foreground="black", font=("Arial", 10, "bold"))
+
+        # Изменяем цвет фона самого фрейма
+        self.configure(bg="#e6e6e6")
 
         # Определение заголовков столбцов
         self.task_tree.heading("ID", text="ID")
@@ -95,7 +106,7 @@ class TaskView(tk.Frame):
 
     def create_task_form(self):
         """Создает форму для заполнения и фильтрации данных задачи"""
-        form_frame = tk.Frame(self, bg="#e6e6e6")  # Задний фон формы светло-серый
+        form_frame = tk.Frame(self)  # Задний фон формы светло-серый
         form_frame.pack(pady=10, fill=tk.X)
 
         # Переменные для хранения данных формы

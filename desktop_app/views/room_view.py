@@ -9,9 +9,20 @@ from desktop_app.controllers.room_controller import get_change_room_status
 class RoomView(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
+        self.parent = parent
 
         # Создание таблицы для отображения номеров
         self.room_tree = ttk.Treeview(self, columns=("id", "Номер", "Тип", "Статус", "Стоимость", "Описание"), show="headings")
+
+        # Изменяем цвет основного окна
+        self.parent.configure(bg="#e6e6e6")
+
+        # Настройка стиля заголовка
+        style = ttk.Style()
+        style.configure("Treeview.Heading", background="#c0c0c0", foreground="black", font=("Arial", 10, "bold"))
+
+        # Изменяем цвет фона самого фрейма
+        self.configure(bg="#e6e6e6")
 
         # Определяем заголовки для таблицы
         self.room_tree.heading("id", text="ID")
@@ -59,7 +70,7 @@ class RoomView(tk.Frame):
 
     def create_room_counter(self):
         """Создает счетчик для отображения количества комнат по типам и статусам"""
-        self.room_counter_frame = tk.Frame(self)
+        self.room_counter_frame = tk.Frame(self, bg="#e6e6e6")
         self.room_counter_frame.pack(fill=tk.X, pady=10)
 
         self.room_count_label = tk.Label(self.room_counter_frame, text="")
@@ -87,9 +98,29 @@ class RoomView(tk.Frame):
         for item in self.room_tree.get_children():
             self.room_tree.delete(item)
 
-        for room in rooms:
+        # Настройка тегов для цветов строк
+        self.room_tree.tag_configure("#fffacd", background="#fffacd")
+        self.room_tree.tag_configure("#d0bee4", background="#d0bee4")
+        self.room_tree.tag_configure("#ffb6c1", background="#ffb6c1")
+        self.room_tree.tag_configure("#f0f0f0", background="#f0f0f0")
+        self.room_tree.tag_configure("#d9d9d9", background="#d9d9d9")
+
+        for index, room in enumerate(rooms):
+            # Определяем цвет строки в зависимости от статуса
+            status = room[3]  # Получаем статус из данных комнаты
+            if status == "на обслуживании":
+                row_color = "#fffacd"
+            elif status == "забронировано":
+                row_color = "#d0bee4"    #"#ffcccb"
+            elif status == "занято":
+                row_color = "#ffb6c1"
+            else:  # Свободно
+                row_color = "#f0f0f0" if index % 2 == 0 else "#d9d9d9"
+
             # Форматирование цены с добавлением текста " руб"
-            formatted_price = f"{room[4]:,.0f} руб"  # Без дробной части
+            formatted_price = f"{room[4]:,.0f} руб"
+
+            # Добавление строки в Treeview с указанным тегом цвета
             self.room_tree.insert("", tk.END, values=(
                 room[0],  # ID
                 room[1],  # Номер комнаты
@@ -97,10 +128,10 @@ class RoomView(tk.Frame):
                 room[3],  # Статус комнаты
                 formatted_price,  # Форматированная стоимость
                 room[5]  # Описание
-            ))
+            ), tags=(row_color,))
 
     def create_form(self):
-        form_frame = tk.Frame(self)
+        form_frame = tk.Frame(self, bg="#e6e6e6")
         form_frame.pack(fill=tk.X, pady=10)
 
         tk.Label(form_frame, text="Номер комнаты").pack(side=tk.LEFT, padx=5)
@@ -120,11 +151,11 @@ class RoomView(tk.Frame):
 
     def create_action_buttons_room(self):
         """Кнопки для изменения статуса номеров"""
-        button_frame = tk.Frame(self)
+        button_frame = tk.Frame(self, bg="#e6e6e6")
         button_frame.pack(fill=tk.X, pady=10)
 
         # Кнопка для изменения статуса номера
-        update_status_button = tk.Button(button_frame, text="Изменить статус", command=self.change_room_status)
+        update_status_button = tk.Button(button_frame, text="Изменить статус", command=self.change_room_status, bg="#c0c0c0")
         update_status_button.pack(side=tk.LEFT, padx=5)
 
     def change_room_status(self):
@@ -155,7 +186,7 @@ class RoomView(tk.Frame):
 
     def create_search_bar_room(self):
         """Создает строку поиска для фильтрации номеров и изменения статуса"""
-        search_frame = tk.Frame(self)
+        search_frame = tk.Frame(self, bg="#e6e6e6")
         search_frame.pack(fill=tk.X, pady=10)
 
         # Поле для выбора типа комнаты
@@ -176,7 +207,7 @@ class RoomView(tk.Frame):
         tk.Entry(search_frame, textvariable=self.search_room_price_var).pack(side=tk.LEFT, padx=5)
 
         # Кнопка поиска
-        search_button = tk.Button(search_frame, text="Поиск", command=self.search_rooms)
+        search_button = tk.Button(search_frame, text="Поиск", command=self.search_rooms, bg="#c0c0c0")
         search_button.pack(side=tk.LEFT, padx=5)
 
     def search_rooms(self):

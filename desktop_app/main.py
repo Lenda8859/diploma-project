@@ -2,7 +2,6 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../')
 from tkinter import messagebox
-
 import tkinter as tk
 from desktop_app.views.room_view import RoomView # Импортируем RoomView
 from desktop_app.views.client_view import ClientView  # Импортируем ClientView
@@ -24,9 +23,6 @@ class MainApp(tk.Tk):
         self.title("Hotel Management System")
         self.geometry("1750x720")
 
-        # # Создаем фрейм ReportView для тестирования
-        # self.report_view = ReportView(self)
-        # self.report_view.pack(fill=tk.BOTH, expand=True)
 
         # Скрываем основное окно до авторизации
         self.withdraw()
@@ -73,57 +69,12 @@ class MainApp(tk.Tk):
         menubar.add_cascade(label="Бронирования", menu=reservation_menu)
         reservation_menu.add_command(label="Бронирования", command=lambda: self.open_reservation_view())
 
-        # Меню "Выход"
-        menubar.add_command(label="Выход", command=self.quit)
-        # self.title("Hotel Management System")
-        # self.geometry("1750x720")
-        #
-        # # Скрываем основное окно до авторизации
-        # self.withdraw()
-        #
-        # # Показываем окно авторизации при запуске
-        # self.login_view = LoginView(self)
-        # self.login_view.grab_set()
-        #
-        #
-        # # Фрейм для отображения содержимого
-        # self.container = tk.Frame(self)
-        # self.container.pack(fill=tk.BOTH, expand=True)
-        #
-        # # Меню
-        # menubar = tk.Menu(self)
-        # self.config(menu=menubar)
-        #
-        # # Начальные значения атрибутов пользователя
-        # self.user_role = None
-        # self.user_id = None
-        #
-        # # Флаг, чтобы предотвратить рекурсивный вызов open_task_view
-        # self.task_view_opened = False
-        #
-        #
-        # # Меню "Номера"
-        # room_menu = tk.Menu(menubar, tearoff=0)
-        # menubar.add_cascade(label="Номера", menu=room_menu)
-        # room_menu.add_command(label="Номера", command=self.open_room_view)
-        #
-        # # Добавь рядом пункт для управления клиентами
-        # client_menu = tk.Menu(menubar, tearoff=0)  # Используем правильное имя 'menubar'
-        # menubar.add_cascade(label="Клиенты", menu=client_menu)
-        # client_menu.add_command(label="Просмотр клиентов", command=self.open_client_view)
-        #
-        # # Меню "Бронирования"
-        # reservation_menu = tk.Menu(menubar, tearoff=0)
-        # menubar.add_cascade(label="Бронирования", menu=reservation_menu)
-        # reservation_menu.add_command(label="Бронирования", command=lambda: self.open_reservation_view())
-        #
-        #
-        # report_menu = tk.Menu(menubar, tearoff=0)
-        # menubar.add_cascade(label="Отчеты", menu=report_menu)
-        # report_menu.add_command(label="Просмотр отчетов", command=self.open_report_view)
-        #
         # # Меню "Выход"
-        # menubar.add_command(label="Выход", command=self.quit)
+        # logout_button = tk.Button(self, text="Выйти", command=self.logout)
+        # logout_button.pack(pady=20)
+
+
+
 
     def open_task_view(self, user_role, user_id=None):
         """Открывает фрейм для задач"""
@@ -171,7 +122,7 @@ class MainApp(tk.Tk):
             "Выход",
             "Вы хотите сменить пользователя или закрыть приложение?\n\n"
             "Нажмите 'Да', чтобы сменить пользователя.\n"
-            "Нажмите 'Нет', чтобы закрыть приложение.\n"
+            "Нажмите 'Нет', чтобы выйти из приложения.\n"
             "Нажмите 'Отмена', чтобы остаться в системе."
         )
 
@@ -181,7 +132,7 @@ class MainApp(tk.Tk):
             self.withdraw()  # Скрываем главное окно
             self.login_view = LoginView(self)  # Показываем окно авторизации
             self.login_view.grab_set()
-        else:  # Нажата кнопка "Нет" (закрыть приложение)
+        else:  # Нажата кнопка "Выход" (закрыть приложение)
             self.quit()  # Закрываем приложение
 
 
@@ -274,7 +225,6 @@ class MainApp(tk.Tk):
         room_view.pack(fill=tk.BOTH, expand=True)
 
     def open_reservation_view(self):
-        print("Модуль бронирований открыт!")  # Отладочное сообщение
         self.clear_frame()  # Удаляем предыдущие фреймы
         reservation_view = ReservationView(self.container)
         reservation_view.pack(fill=tk.BOTH, expand=True)
@@ -287,14 +237,14 @@ class MainApp(tk.Tk):
 
     def open_report_view(self):
         """Открывает фрейм для отчетов"""
-        print("Открывается модуль отчетов...")  # Отладочное сообщение
+        #print("Открывается модуль отчетов...")  # Отладочное сообщение
         self.clear_frame()  # Удаляем предыдущий фрейм
         report_view = ReportView(self.container)  # Открываем фрейм для отчетов
         report_view.pack(fill=tk.BOTH, expand=True)
 
     def clear_frame(self):
         """Очищает содержимое контейнера"""
-        print("Очистка контейнера!")  # Для отладки
+        #print("Очистка контейнера!")  # Для отладки
 
         # Убедитесь, что task_view_opened сбрасывается при очистке
         self.task_view_opened = False
@@ -324,9 +274,9 @@ class MainApp(tk.Tk):
 
 
 if __name__ == "__main__":
-    print(f"Файл базы данных найден по пути: {DATABASE}")
-    create_tables()
-    apply_migrations()
+    #print(f"Файл базы данных найден по пути: {DATABASE}")
+    #create_tables()
+    #apply_migrations()
 
     # Запуск основного приложения
     app = MainApp()
