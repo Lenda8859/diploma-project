@@ -1,20 +1,20 @@
 import sqlite3
 import hashlib
-
+import logging
 from datetime import datetime, timedelta
 import random
-from tkinter import messagebox
-from desktop_app.models.status_enums import ReservationStatus, RoomStatus
+from desktop_app.models.status_enums import ReservationStatus
 
 DATABASE = 'F:\Hotel Management System/hotel_management.db'
 
+
 def create_tables():
     """Создание таблиц, если они не существуют"""
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
 
         # Открываем SQL-файл для выполнения миграций
-        with open('migrations/create_tables.sql', 'r', encoding='utf-8') as sql_file:
+        with open('F:/Hotel Management System/migrations/create_tables.sql', 'r', encoding='utf-8') as sql_file:
             sql_script = sql_file.read()
 
         # Выполняем SQL скрипт
@@ -23,11 +23,15 @@ def create_tables():
 
         print("Таблицы успешно созданы.")
 
+
+
 ##************************************************ Клиенты *****************************************************************##
+
+
 
 # Добавление нового клиента
 def insert_client_in_db(last_name, first_name, phone, middle_name=None, email=None, address=None, notes=None):
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
 
         # Проверяем, существует ли клиент с таким телефоном
@@ -44,13 +48,14 @@ def insert_client_in_db(last_name, first_name, phone, middle_name=None, email=No
             VALUES (?, ?, ?, ?, ?, ?, ?)
         """, (last_name, first_name, middle_name, phone, email, address, notes))
         conn.commit()
+        return cursor.lastrowid
         print("Клиент успешно добавлен.")
         return True  # Возвращаем True, если клиент успешно добавлен
 
 # Получение списка всех клиентов
 def get_all_clients():
     """Получение списка всех клиентов из базы данных"""
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
         cursor.execute("""
             SELECT ID, Фамилия, Имя, Отчество, Телефон, Email, Дата_регистрации, Адрес, Примечания
@@ -61,7 +66,7 @@ def get_all_clients():
 
 # Поиск клиента по телефону
 def find_client_by_phone(phone):
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM Клиенты WHERE Телефон = ?", (phone,))
         client = cursor.fetchone()
@@ -69,7 +74,7 @@ def find_client_by_phone(phone):
 
 def get_client_full_name(client_id):
     """Возвращает полное имя клиента по его client_id"""
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
         cursor.execute("""
             SELECT Фамилия || ' ' || Имя || ' ' || Отчество 
@@ -79,22 +84,10 @@ def get_client_full_name(client_id):
         result = cursor.fetchone()
         return result[0] if result else "Неизвестный клиент"
 
-# def delete_all_clients():
-#     """Удаление всех записей из таблицы 'Клиенты'"""
-#     with sqlite3.connect(DATABASE) as conn:
-#         cursor = conn.cursor()
-#
-#         # Выполняем SQL-запрос для удаления всех записей
-#         cursor.execute("DELETE FROM Клиенты")
-#
-#         # Подтверждаем изменения
-#         conn.commit()
-#
-#         print("Все клиенты успешно удалены.")
 
 # Обновление клиента
 def update_client_in_db(client_id, last_name, first_name, phone, email):
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
         cursor.execute("""
             UPDATE Клиенты SET Фамилия = ?, Имя = ?, Телефон = ?, Email = ?
@@ -103,11 +96,34 @@ def update_client_in_db(client_id, last_name, first_name, phone, email):
         conn.commit()
         print(f"Клиент с id {client_id} успешно обновлен.")
 
+#сохранения пользователя в базу данных
+def add_client(first_name, last_name, middle_name, email, password):
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO Клиенты (Имя, Фамилия, Отчество, email, password)
+            VALUES (?, ?, ?, ?, ?)
+        """, (first_name, last_name, middle_name, email, password))
+        conn.commit()
+
+######################################  Пользователи   ##################################################################
+def insert_user_in_db(first_name, last_name, email, phone, hashed_password):
+    try:
+        with sqlite3.connect('F:/Hotel Management System/hotel_management.db', timeout=10) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO Пользователи (Имя, Фамилия, Email, Телефон, Пароль)
+                VALUES (?, ?, ?, ?, ?)
+            """, (first_name, last_name, email, phone, hashed_password))
+            conn.commit()
+            return cursor.lastrowid  # Возвращает ID нового пользователя
+    except sqlite3.IntegrityError:
+        return None  # Возвращает None, если пользователь с таким email уже существует
 ##*******************************************************  Номера  ************************************************************##
 
 def initialize_rooms():
     """Инициализация базы данных с номерами комнат: 10 стандартных, 8 сьютов, 6 делюксов."""
-    conn = sqlite3.connect(DATABASE)
+    conn = sqlite3.connect(DATABASE, timeout=10)
     cursor = conn.cursor()
 
     # Проверяем, есть ли уже номера в базе данных
@@ -140,35 +156,38 @@ def initialize_rooms():
 
 
 # Добавление номера
-def add_room(room_number, room_type, room_status, price, description):
-    with sqlite3.connect(DATABASE) as conn:
+def add_room(room_number, room_type, room_status, price, description, capacity, area, amenities, notes):
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
         cursor.execute("""
-            INSERT INTO Номера (Номер_комнаты, Тип_комнаты, Статус_комнаты, Стоимость, Описание)
-            VALUES (?, ?, ?, ?, ?)
-        """, (room_number, room_type, room_status, price, description))
+            INSERT INTO Номера (Номер_комнаты, Тип_комнаты, Статус_комнаты, Стоимость, Описание, Вместимость, Площадь, Удобства, Примечания)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (room_number, room_type, room_status, price, description, capacity, area, amenities, notes))
         conn.commit()
         print(f"Номер {room_number} успешно добавлен.")
 
 # Получение всех номеров
 def get_all_rooms():
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT id, Номер_комнаты, Тип_комнаты, Статус_комнаты, Стоимость, Описание FROM Номера
+             SELECT id, Номер_комнаты, Тип_комнаты, Статус_комнаты, Стоимость, Описание, Вместимость, Площадь, Удобства FROM Номера
         """)
         rooms = cursor.fetchall()
         return rooms
 
 # Изменение статуса номера
-def update_room(room_id, room_number, room_type, room_status, price, description):
-    with sqlite3.connect(DATABASE) as conn:
+def update_room(room_id, room_number, room_type, room_status, price, description, capacity, area, amenities, notes):
+    """
+    Обновление данных существующего номера.
+    """
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
         cursor.execute("""
             UPDATE Номера
-            SET Номер_комнаты = ?, Тип_комнаты = ?, Статус_комнаты = ?, Стоимость = ?, Описание = ?
+            SET Номер_комнаты = ?, Тип_комнаты = ?, Статус_комнаты = ?, Стоимость = ?, Описание = ?, Вместимость = ?, Площадь = ?, Удобства = ?
             WHERE id = ?
-        """, (room_number, room_type, room_status, price, description, room_id))
+        """, (room_number, room_type, room_status, price, description, capacity, area, amenities, room_id))
         conn.commit()
         print(f"Номер с ID {room_id} успешно обновлен.")
 
@@ -176,7 +195,7 @@ def update_room_status(room_number, new_status):
     """Обновление статуса комнаты"""
     try:
         print(f"Отладка: Попытка обновить статус комнаты {room_number} на {new_status}")
-        with sqlite3.connect(DATABASE) as conn:
+        with sqlite3.connect(DATABASE, timeout=10) as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 UPDATE Номера SET Статус_комнаты = ? WHERE Номер_комнаты = ?
@@ -189,7 +208,7 @@ def update_room_status(room_number, new_status):
 
 def room_exists(room_number):
     """Проверка, существует ли комната с таким номером"""
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT COUNT(*) FROM Номера WHERE Номер_комнаты = ?", (room_number,))
         result = cursor.fetchone()
@@ -198,7 +217,7 @@ def room_exists(room_number):
 
 def get_room_counts():
     """Возвращает количество комнат по типу и статусу"""
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
         cursor.execute("""
             SELECT Тип_комнаты, Статус_комнаты, COUNT(*)
@@ -223,35 +242,81 @@ def get_rooms_filtered(room_type=None, room_status=None, price_max=None):
         query += " AND Стоимость <= ?"
         params.append(price_max)
 
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
         cursor.execute(query, params)
         return cursor.fetchall()
 
-##********************************************************  Бронирование  ***************************************************##
-
-
-# Создание нового бронирования
-def add_reservation(client_id, check_in_date, check_out_date, room_id, booking_status, payment_status, payment_method=None, additional_info=None):
-    with sqlite3.connect(DATABASE) as conn:
+def add_new_columns_to_rooms():
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
-        cursor.execute("""
-            INSERT INTO Бронирования (client_id, Дата_заезда, Дата_выезда, Номер_комнаты, Статус_бронирования, Статус_оплаты, Способ_оплаты, Примечания, Дата_создания)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, date('now'))
-        """, (client_id, check_in_date, check_out_date, room_id, booking_status, payment_status, payment_method, additional_info))
+        cursor.execute("PRAGMA table_info(Номера);")
+        columns = [column[1] for column in cursor.fetchall()]
+
+        if 'Вместимость' not in columns:
+            cursor.execute("ALTER TABLE Номера ADD COLUMN Вместимость INTEGER;")
+            print("Колонка 'Вместимость' добавлена в таблицу 'Номера'.")
+
+        if 'Площадь' not in columns:
+            cursor.execute("ALTER TABLE Номера ADD COLUMN Площадь REAL;")
+            print("Колонка 'Площадь' добавлена в таблицу 'Номера'.")
+
+        if 'Удобства' not in columns:
+            cursor.execute("ALTER TABLE Номера ADD COLUMN Удобства TEXT;")
+            print("Колонка 'Удобства' добавлена в таблицу 'Номера'.")
+
         conn.commit()
-        print(f"Бронирование для клиента с ID {client_id} успешно добавлено.")
+
+
+
+
+
+##********************************************************  Бронирование  ***************************************************##
+from desktop_app.models.status_enums import ReservationStatus
+
+# Настройка логирования
+logging.basicConfig(filename='F:/Hotel Management System/logs/reservation_log.log', level=logging.DEBUG,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
+
+
+def add_reservation(client_id, check_in_date, check_out_date, room_id, booking_status, payment_status,
+                    payment_method=None, additional_info=None):
+    logging.debug(
+        f"Вызов add_reservation с параметрами: client_id={client_id}, check_in_date={check_in_date}, check_out_date={check_out_date}, room_id={room_id}, booking_status={booking_status}, payment_status={payment_status}, payment_method={payment_method}, additional_info={additional_info}")
+
+    try:
+        # Преобразование строки статуса в элемент перечисления
+        booking_status_enum = ReservationStatus[booking_status.upper()]
+        logging.debug(f"Статус бронирования преобразован в {booking_status_enum}")
+    except KeyError:
+        logging.error(f"Неверный статус бронирования: {booking_status}")
+        raise ValueError(f"Неверный статус бронирования: {booking_status}")
+
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
+        cursor = conn.cursor()
+        try:
+            # Вставка нового бронирования в базу данных
+            cursor.execute("""
+                INSERT INTO Бронирования (client_id, Дата_заезда, Дата_выезда, Номер_комнаты, Статус_бронирования, Статус_оплаты, Способ_оплаты, Примечания, Дата_создания)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, date('now'))
+            """, (client_id, check_in_date, check_out_date, room_id, booking_status_enum.value, payment_status,
+                  payment_method, additional_info))
+            conn.commit()
+            logging.info(f"Бронирование для клиента с ID {client_id} успешно добавлено.")
+        except sqlite3.IntegrityError as e:
+            logging.error(f"Ошибка базы данных при вставке бронирования: {e}")
+            raise ValueError(f"Ошибка базы данных: {e}")
 
 
 # Получение всех бронирований
 def get_all_reservations():
     """Получение всех бронирований из базы данных с включением данных клиента"""
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
         cursor.execute("""
             SELECT 
                 Бронирования.id, 
-                Клиенты.Фамилия || ' ' || Клиенты.Имя AS ФИО_клиента, 
+                Клиенты.Фамилия || ' ' || Клиенты.Имя || ' ' || Клиенты.Отчество AS ФИО_клиента, 
                 Бронирования.Дата_заезда, 
                 Бронирования.Дата_выезда, 
                 Бронирования.Номер_комнаты, 
@@ -267,10 +332,9 @@ def get_all_reservations():
     return reservations
 
 
-
 def delete_reservation(reservation_id):
     """Удаление бронирования и обновление статуса комнаты"""
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
 
         # Получаем номер комнаты из бронирования, которое будет удалено
@@ -299,7 +363,7 @@ def delete_reservation(reservation_id):
 # Проверка логина и пароля
 def authenticate_employee(username, password):
     hashed_password = hashlib.sha256(password.encode()).hexdigest()  # Хэширование пароля
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
         cursor.execute("""
             SELECT id, Роль FROM Сотрудники WHERE username = ? AND password = ?
@@ -309,7 +373,7 @@ def authenticate_employee(username, password):
 
 # Добавление недостающих колонок (если нужно)
 def add_columns_if_not_exist():
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
         cursor.execute("PRAGMA table_info(Сотрудники);")
         columns = [column[1] for column in cursor.fetchall()]
@@ -345,7 +409,7 @@ def add_employee_bd(last_name, first_name, middle_name, phone, username, passwor
     hashed_password = hashlib.sha256(password.encode()).hexdigest()
 
     # Открываем соединение с базой данных
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
 
         # Проверка, существует ли уже пользователь с таким username
@@ -368,7 +432,7 @@ def add_employee_bd(last_name, first_name, middle_name, phone, username, passwor
 # Получение всех сотрудников
 def get_employees_brief(): # get_all_employees
     """Возвращает краткий список всех сотрудников из базы данных"""
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
         cursor.execute("""
             SELECT id, Фамилия, Имя, Отчество FROM Сотрудники
@@ -378,7 +442,7 @@ def get_employees_brief(): # get_all_employees
 
 def get_employees_full(): #get_all_employees_bd
     """Возвращает полный список всех сотрудников из базы данных"""
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
         # Извлекаем все необходимые поля из таблицы Сотрудники
         cursor.execute("""
@@ -395,7 +459,7 @@ def update_employee_schedule(employee_id, new_schedule):
     :param employee_id: Уникальный идентификатор сотрудника
     :param new_schedule: Новый график работы
     """
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
         cursor.execute("""
             UPDATE Сотрудники SET График = ? WHERE id = ?
@@ -410,7 +474,7 @@ def log_action(employee_id, action):
     :param employee_id: Уникальный идентификатор сотрудника
     :param action: Описание действия
     """
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
 
         # Логирование действия в таблицу logs (предполагается, что таблица logs существует)
@@ -429,7 +493,7 @@ def update_employee_role(employee_id, new_role):
     :param employee_id: Уникальный идентификатор сотрудника
     :param new_role: Новая роль ("менеджер", "администратор" или "системный администратор")
     """
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
         cursor.execute("""
             UPDATE Сотрудники SET Роль = ? WHERE id = ?
@@ -439,7 +503,7 @@ def update_employee_role(employee_id, new_role):
 
 def get_employee_by_id(employee_id):
     """Возвращает информацию о сотруднике по ID"""
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM Сотрудники WHERE id = ?", (employee_id,))
         return cursor.fetchone()
@@ -447,7 +511,7 @@ def get_employee_by_id(employee_id):
 def update_employee_info(employee_id, new_last_name, new_first_name, new_middle_name, new_phone,
                         new_username, new_password, new_position, new_schedule, new_role):
     """Обновляет информацию о сотруднике"""
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
         cursor.execute("""
             UPDATE Сотрудники 
@@ -459,7 +523,7 @@ def update_employee_info(employee_id, new_last_name, new_first_name, new_middle_
 
 def check_username_uniqueness(username, employee_id):
     """Проверяет, уникален ли логин, исключая текущего сотрудника"""
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
         cursor.execute("""
             SELECT COUNT(*) FROM Сотрудники WHERE username = ? AND id != ?
@@ -468,7 +532,7 @@ def check_username_uniqueness(username, employee_id):
 
 def delete_employee_by_id(employee_id):
     """Удаляет сотрудника из базы данных по ID"""
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
         cursor.execute("DELETE FROM Сотрудники WHERE id = ?", (employee_id,))
         conn.commit()
@@ -504,7 +568,7 @@ def get_employee_id_by_name(employee_name):
 
     last_name, first_name, middle_name = parts  # Фамилия, имя и отчество
 
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
         cursor.execute("""
             SELECT id FROM Сотрудники WHERE Фамилия = ? AND Имя = ? AND Отчество = ?
@@ -519,7 +583,7 @@ def get_employee_id_by_name(employee_name):
 # Добавление новой задачи
 def add_task(task_type, employee_id, description, status, due_date):
     """Добавление новой задачи в базу данных"""
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO Задачи (Тип_задачи, Сотрудник_id, Описание, Статус, Срок_исполнения)
@@ -529,7 +593,7 @@ def add_task(task_type, employee_id, description, status, due_date):
 
 
 def get_all_tasks():
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
         cursor.execute("""
             SELECT
@@ -551,7 +615,7 @@ def get_all_tasks():
 # Обновление статуса задачи
 def update_task_status(task_id, new_status, user_id):
     """Обновление статуса задачи и запись в историю"""
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
 
         # Обновление статуса задачи
@@ -571,7 +635,7 @@ def update_task_status(task_id, new_status, user_id):
 def delete_task_bd(task_id):
     """Удаление задачи из базы данных"""
     try:
-        with sqlite3.connect(DATABASE) as conn:
+        with sqlite3.connect(DATABASE, timeout=10) as conn:
             cursor = conn.cursor()
             cursor.execute("DELETE FROM Задачи WHERE id = ?", (task_id,))
             conn.commit()
@@ -602,13 +666,13 @@ def get_filtered_tasks(employee=None, status=None, start_date=None, end_date=Non
         params.append(start_date)
         params.append(end_date)
 
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
         cursor.execute(query, params)
         return cursor.fetchall()
 
 def get_tasks_by_employee(employee_id):
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
         cursor.execute("""
             SELECT * FROM Задачи WHERE Сотрудник_id = ?
@@ -632,14 +696,14 @@ def get_filtered_tasks(employee=None, status=None, start_date=None, end_date=Non
         params.append(start_date)
         params.append(end_date)
 
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
         cursor.execute(query, params)
         return cursor.fetchall()
 
 def update_task_details(task_id, task_type, employee_id, description, status, due_date):
     """Обновляет все данные задачи по ID"""
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
         cursor.execute("""
             UPDATE Задачи
@@ -653,7 +717,7 @@ def update_task_details(task_id, task_type, employee_id, description, status, du
 
 def add_report(employee_id, description, report_type):
     """Добавление нового отчета в таблицу Отчеты"""
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO Отчеты (Сотрудник_id, Описание, Тип_отчета)
@@ -664,7 +728,7 @@ def add_report(employee_id, description, report_type):
 
 def get_all_reports():
     """Получение всех отчетов из таблицы Отчеты"""
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM Отчеты")
         reports = cursor.fetchall()
@@ -673,7 +737,7 @@ def get_all_reports():
 
 def get_daily_room_status(start_date, end_date):
     """Получение данных о статусах номеров за указанный период по дням"""
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
 
         # Получаем все номера отеля
@@ -732,7 +796,7 @@ def get_daily_room_status(start_date, end_date):
 
 def create_logs_table():
     """Создает таблицу logs, если она не существует"""
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS logs (
@@ -750,7 +814,7 @@ create_logs_table()
 
 def get_logs():
     """Получение всех записей логов"""
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM logs")
         logs = cursor.fetchall()
@@ -765,7 +829,7 @@ for log in logs:
 
 ## Миграции
 def apply_migrations():
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
 
         # Проверяем, существует ли таблица 'Бронирования'
@@ -781,7 +845,7 @@ def apply_migrations():
             print("Таблица 'Бронирования' уже существует. Миграция пропущена.")
 
     """Проверка наличия таблицы 'Задачи' и создание ее при необходимости"""
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
         cursor.execute("""
                 SELECT count(name) FROM sqlite_master WHERE type='table' AND name='Задачи'
@@ -801,7 +865,7 @@ def apply_migrations():
 
 def generate_clients():
     """Генерация 25 клиентов с данными"""
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
 
         # Фиксированные данные для клиентов
@@ -831,7 +895,7 @@ def generate_clients():
 
 def generate_reservations():
     """Генерация 30 бронирований для созданных клиентов"""
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
 
         # Статусы бронирования и оплаты

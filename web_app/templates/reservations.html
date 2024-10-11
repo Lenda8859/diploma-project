@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Список бронирований</title>
+</head>
+<body>
+    <h1>Список всех бронирований</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Клиент</th>
+                <th>Дата заезда</th>
+                <th>Дата выезда</th>
+                <th>Номер комнаты</th>
+                <th>Статус</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for reservation in reservations %}
+                <tr>
+                    <td>{{ reservation[0] }}</td>
+                    <td>{{ reservation[1] }}</td>
+                    <td>{{ reservation[2] }}</td>
+                    <td>{{ reservation[3] }}</td>
+                    <td>{{ reservation[4] }}</td>
+                    <td>{{ reservation[5] }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

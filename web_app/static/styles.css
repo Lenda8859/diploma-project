@@ -1,0 +1,296 @@
+/* Сброс основных стилей (убирает отступы и приводит элементы к единому виду) */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* Общие стили для всего документа (базовый шрифт) */
+body {
+    font-family: Arial, sans-serif;
+}
+
+/* Стили для кнопки "Личный кабинет" */
+.header {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+}
+
+.header-button {
+    padding: 10px 20px;
+    background-color: #32CD32; /* Основной цвет кнопки */
+    color: white; /* Цвет текста */
+    border: none;
+    border-radius: 5px; /* Скругленные углы кнопки */
+    cursor: pointer; /* Меняем курсор на указатель */
+}
+
+.header-button:hover {
+    background-color: #0056b3; /* Цвет кнопки при наведении */
+}
+
+/* Стили для фото и контента (центральное фото отеля) */
+.hotel-photos {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.thumbnail-photos img {
+    margin-right: 10px; /* Отступ между миниатюрами фото */
+}
+
+/* Центрируем заголовки и контент блоков с информацией о гостинице и услугами */
+.hotel-info, .services, .room-search {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Форма для выбора дат на главной странице */
+.room-search {
+    text-align: center; /* Центрируем форму */
+    margin-bottom: 20px; /* Отступ снизу */
+}
+
+.date-form {
+    display: inline-block;
+    text-align: left;
+    padding: 10px;
+    background-color: #D5D5D5B; /* Цвет фона формы */
+    border-radius: 8px; /* Скругленные углы формы */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Тень под формой */
+}
+
+/* Стили для полей ввода дат (Дата заезда и Дата выезда) */
+.form-dates {
+    display: flex;
+    justify-content: center; /* Горизонтальное выравнивание полей даты */
+    gap: 20px; /* Пробел между полями */
+    margin-bottom: 20px; /* Отступ снизу для кнопки */
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.form-group label {
+    margin-bottom: 5px; /* Отступ между меткой и полем ввода */
+    font-size: 14px;
+}
+
+.form-group input[type="date"] {
+    padding: 8px;
+    width: 200px;
+    border: 1px solid #ccc; /* Граница вокруг полей ввода */
+    border-radius: 5px; /* Скругленные углы полей */
+}
+
+/* Центрирование кнопки под полями ввода */
+.submit-button {
+    text-align: center; /* Центрируем кнопку */
+}
+
+.submit-button button {
+    width: auto;
+    padding: 10px 20px;
+    background-color: #32CD32; /* Цвет кнопки */
+    color: #141613; /* Цвет текста кнопки */
+    border: none;
+    border-radius: 5px; /* Скругленные углы кнопки */
+    cursor: pointer; /* Указатель при наведении */
+}
+
+.submit-button button:hover {
+    background-color: #0056b3; /* Цвет кнопки при наведении */
+}
+
+/* Сообщение о том, что номера не найдены */
+.no-rooms-message {
+    color: #141613; /* Красный цвет текста для видимости */
+    font-size: 18px;
+    margin-bottom: 15px;
+    text-align: center; /* Центрируем текст сообщения */
+}
+
+/* Таблица с номерами в номерах */
+.room-table {
+    width: 80%; /* Ширина таблицы */
+    margin: 0 auto; /* Центрируем таблицу */
+    border-collapse: collapse; /* Объединяем границы ячеек таблицы */
+}
+
+.room-table th, .room-table td {
+    border: 1px solid #ddd; /* Цвет и стиль границы ячеек */
+    padding: 8px;
+    text-align: center; /* Центрируем текст в ячейках */
+}
+
+.room-table th {
+    background-color: #f2f2f2; /* Цвет фона для заголовков таблицы */
+}
+
+.room-table td img {
+    width: 100px; /* Ширина картинок в ячейках таблицы */
+}
+
+/* Модальное окно */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000; /* Уровень по оси z, чтобы окно было поверх других элементов */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Темный полупрозрачный фон */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px; /* Скругленные углы окна */
+    width: 400px;
+    position: relative;
+}
+
+.close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    color: #aaa; /* Цвет иконки закрытия */
+    font-size: 20px;
+}
+
+.close:hover {
+    color: #000; /* Цвет иконки при наведении */
+}
+
+/* Стили для вкладок в модальном окне */
+.tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.tab {
+    padding: 10px 20px;
+    margin: 0 5px;
+    background-color: #ddd; /* Цвет вкладок */
+    border: none;
+    cursor: pointer;
+    flex: 1;
+    text-align: center;
+}
+
+.tab.active {
+    background-color: #007bff; /* Цвет активной вкладки */
+    color: white; /* Цвет текста активной вкладки */
+}
+
+/* Скрытие неактивных форм */
+.hidden {
+    display: none;
+}
+
+/* Стили для формы входа и регистрации */
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    margin-top: 20px;
+}
+
+.auth-form input {
+    margin-bottom: 15px;
+    padding: 10px;
+    font-size: 16px;
+}
+
+/* Форма бронирования */
+.booking-form-container {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px; /* Скругленные углы формы */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Тень вокруг формы */
+    width: 100%;
+    max-width: 500px;
+    margin: 50px auto; /* Центрируем форму */
+}
+
+/* Заголовки в форме */
+h1 {
+    text-align: center;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+/* Поля ввода в форме */
+fieldset {
+    border: none;
+    margin-bottom: 20px;
+}
+
+legend {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+input[type="text"],
+input[type="tel"],
+input[type="email"],
+select,
+textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc; /* Граница полей */
+    border-radius: 5px; /* Скругленные углы полей */
+    box-sizing: border-box;
+}
+
+/* Кнопка в форме бронирования */
+input[type="submit"] {
+    width: 100%;
+    padding: 10px;
+    background-color: #28a745; /* Зеленая кнопка */
+    color: white; /* Белый текст */
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+input[type="submit"]:hover {
+    background-color: #218838; /* Цвет кнопки при наведении */
+}
+
+/* Переключатели вкладок */
+.toggle-button {
+    background-color: transparent;
+    border: none;
+    color: #32CD32; /* Синий цвет текста */
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0;
+}
+
+.toggle-button:hover {
+    text-decoration: underline;
+}
+
+/* Прячем секции по умолчанию */
+.hidden {
+    display: none;
+}

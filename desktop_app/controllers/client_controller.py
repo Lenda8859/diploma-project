@@ -7,7 +7,7 @@ DATABASE = 'F:\Hotel Management System/hotel_management.db'
 # Функция добавления клиента
 def add_new_client(last_name, first_name, middle_name, phone, email):
     """Добавление клиента в базу данных"""
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO Клиенты (Фамилия, Имя, Отчество, Телефон, Email, Дата_регистрации)
@@ -19,7 +19,7 @@ def add_new_client(last_name, first_name, middle_name, phone, email):
 # Функция удаления клиента
 def remove_client(client_id):
     """Удаление клиента из базы данных"""
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
 
         # Проверяем, существует ли клиент с таким ID
@@ -38,7 +38,7 @@ def get_clients():
 
 
 def update_client(client_id, last_name, first_name, middle_name, phone, email, address=None, notes=None):
-    with sqlite3.connect(DATABASE) as conn:
+    with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
         cursor.execute("""
             UPDATE Клиенты 

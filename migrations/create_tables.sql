@@ -18,8 +18,18 @@ CREATE TABLE IF NOT EXISTS Номера (
     Тип_комнаты TEXT NOT NULL,  -- Тип комнаты (например, Стандарт, Сьют, Делюкс)
     Статус_комнаты TEXT CHECK(Статус_комнаты IN ('свободно', 'забронировано', 'занято', 'на обслуживании')) NOT NULL DEFAULT 'свободно',  -- Статус комнаты
     Стоимость REAL NOT NULL,  -- Цена за сутки
-    Описание TEXT  -- Дополнительная информация
+    Описание TEXT, -- Дополнительная информация
+    Вместимость INTEGER,
+    Площадь REAL,
+    Удобства TEXT,
+    Примечания TEXT
 );
+
+--ALTER TABLE Номера ADD COLUMN Вместимость INTEGER;
+--ALTER TABLE Номера ADD COLUMN Площадь REAL;
+--ALTER TABLE Номера ADD COLUMN Удобства TEXT;
+--ALTER TABLE Номера ADD COLUMN Примечания TEXT;
+
 
 -- Создание таблицы бронирований
 CREATE TABLE IF NOT EXISTS Бронирования (
@@ -101,3 +111,4 @@ CREATE TABLE IF NOT EXISTS logs (
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (employee_id) REFERENCES Сотрудники(id)
 );
+

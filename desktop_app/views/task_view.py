@@ -13,7 +13,7 @@ class TaskView(tk.Frame):
     def __init__(self, parent, user_role, user_id=None):
         super().__init__(parent)
         self.parent = parent
-        print("Инициализация TaskView")
+        #print("Инициализация TaskView")
 
         # Сохраняем user_role и user_id как атрибуты класса
         self.user_role = user_role
@@ -60,10 +60,6 @@ class TaskView(tk.Frame):
 
         # Создаем форму для добавления/редактирования задач
         self.create_task_form()
-
-
-
-
 
     def load_tasks(self, user_role, user_id=None):
         """Загружает задачи в таблицу с учетом роли пользователя и его ID"""

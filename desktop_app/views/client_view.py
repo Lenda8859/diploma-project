@@ -39,8 +39,6 @@ class ClientView(tk.Frame):
         self.client_tree.column("Доп.инфо", width=150)
 
         self.client_tree.pack(fill=tk.BOTH, expand=True)
-
-
         # Инициализация переменных
         self.registration_date_var = tk.StringVar(value=self.get_current_date())
         self.last_name_var = tk.StringVar()
@@ -57,8 +55,6 @@ class ClientView(tk.Frame):
 
         # Добавляем Label для предупреждений
         self.phone_warning_label = tk.Label(self, text="", fg="red")
-
-
 
         # Загрузка списка клиентов
         self.load_clients()
@@ -172,16 +168,6 @@ class ClientView(tk.Frame):
             self.phone_warning_label.config(text="")  # Сбрасываем предупреждение
         else:
             self.phone_warning_label.config(text="Неверный формат телефона! Пример: +7 xxx xxx xx xx")
-
-    # def create_search_bar(self):
-    #     """Поле для поиска клиента"""
-    #     search_frame = tk.Frame(self)
-    #     search_frame.pack(fill=tk.X, pady=3)
-    #
-    #     tk.Label(search_frame, text="Поиск клиента").pack(side=tk.LEFT, padx=5)
-    #     search_entry = tk.Entry(search_frame, textvariable=self.search_var, width=30)  # Уменьшите ширину до 30
-    #     search_entry.pack(side=tk.LEFT, padx=5)
-    #     search_entry.bind("<KeyRelease>", self.search_clients)
 
     def create_action_buttons(self):
         """Кнопки для добавления, удаления и изменения клиента"""

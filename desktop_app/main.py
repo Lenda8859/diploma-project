@@ -69,16 +69,10 @@ class MainApp(tk.Tk):
         menubar.add_cascade(label="Бронирования", menu=reservation_menu)
         reservation_menu.add_command(label="Бронирования", command=lambda: self.open_reservation_view())
 
-        # # Меню "Выход"
-        # logout_button = tk.Button(self, text="Выйти", command=self.logout)
-        # logout_button.pack(pady=20)
-
-
-
 
     def open_task_view(self, user_role, user_id=None):
         """Открывает фрейм для задач"""
-        print("Переключение на модуль 'Задачи'")
+        #print("Переключение на модуль 'Задачи'")
         # Проверяем флаг, чтобы предотвратить повторное открытие
         if not self.task_view_opened:
             self.clear_frame()  # Удаляем предыдущий фрейм
@@ -109,7 +103,7 @@ class MainApp(tk.Tk):
 
         # Открываем модуль задач только один раз
         if not self.task_view_opened:
-            print(f"Перед вызовом open_task_view: Роль: {self.user_role}, ID пользователя: {self.user_id}")
+            #print(f"Перед вызовом open_task_view: Роль: {self.user_role}, ID пользователя: {self.user_id}")
             self.open_task_view(self.user_role, self.user_id)
 
     def update_title(self):
@@ -138,7 +132,7 @@ class MainApp(tk.Tk):
 
     def create_manager_menu(self):
         """Создаем меню для менеджера"""
-        print("Создание меню для менеджера...")  # Отладка
+        #print("Создание меню для менеджера...")  # Отладка
         menubar = tk.Menu(self)
         self.config(menu=menubar)
 
@@ -213,7 +207,7 @@ class MainApp(tk.Tk):
 
     def open_employee_list_view(self):
         """Открывает фрейм для просмотра и редактирования сотрудников"""
-        print("Открытие окна просмотра сотрудников...")  # Отладка
+        #print("Открытие окна просмотра сотрудников...")  # Отладка
         self.clear_frame()  # Очищает контейнер от предыдущего содержимого
         employee_list_view = EmployeeListView(self.container)  # Загружаем фрейм для сотрудников в контейнер
         employee_list_view.pack(fill=tk.BOTH, expand=True)

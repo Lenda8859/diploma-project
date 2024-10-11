@@ -180,7 +180,7 @@ class ReportView(tk.Frame):
 
     def get_monthly_room_status(self, start_date, end_date):
         """Получение данных о статусах номеров за указанный период по месяцам"""
-        with sqlite3.connect(DATABASE) as conn:
+        with sqlite3.connect(DATABASE, timeout=10) as conn:
             cursor = conn.cursor()
 
             # Выполняем запрос для группировки данных по месяцам
@@ -241,7 +241,7 @@ class ReportView(tk.Frame):
 
     def get_yearly_room_status(self, start_date, end_date):
         """Получение данных о статусах номеров за указанный период по годам"""
-        with sqlite3.connect(DATABASE) as conn:
+        with sqlite3.connect(DATABASE, timeout=10) as conn:
             cursor = conn.cursor()
 
             # Выполняем запрос для группировки данных по годам
@@ -302,7 +302,7 @@ class ReportView(tk.Frame):
 
     def get_total_room_count(self):
         """Возвращает общее количество номеров в отеле"""
-        with sqlite3.connect(DATABASE) as conn:
+        with sqlite3.connect(DATABASE, timeout=10) as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT COUNT(*) FROM Номера")
             total_rooms = cursor.fetchone()[0]
@@ -310,7 +310,7 @@ class ReportView(tk.Frame):
 
     def get_weekly_room_status(self, start_date, end_date):
         """Получение данных о статусах номеров за указанный период по неделям"""
-        with sqlite3.connect(DATABASE) as conn:
+        with sqlite3.connect(DATABASE, timeout=10) as conn:
             cursor = conn.cursor()
 
             # Выполняем запрос для группировки данных по неделям

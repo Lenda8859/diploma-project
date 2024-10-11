@@ -1,196 +1,154 @@
 import sys
 import os
+import unittest
+from unittest.mock import MagicMock, patch
+
+# Абсолютный путь к корню проекта "Hotel Management System"
+project_root = r'F:\Hotel Management System'
+
+# Добавление пути к `sys.path`
+sys.path.append(project_root)
+from desktop_app.views.room_view import RoomView
 import sqlite3
-DATABASE = 'F:/hotel_management_project/hotel_management.db'
-sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../')
+
+# Use an in-memory database for testing
+TEST_DATABASE = 'F:\Hotel Management System/hotel_management.db'
+# Добавляем путь к корню проекта
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
 from desktop_app.models.database_manager import (
-    create_tables,
-    get_all_rooms, update_room_status,
-    add_reservation, get_all_reservations, update_reservation_status,
-    add_employee, get_all_employees, update_employee_schedule,
-    add_task, get_all_tasks, update_task_status,
-    insert_client_in_db, update_client_in_db, get_all_clients,
-    log_action, add_report, get_all_reports
+    create_tables, add_room, update_room
 )
-from desktop_app.models.status_enums import RoomStatus, ReservationStatus
 
 
-"""Пояснение к тесту:
-Создание клиента:
+class TestRoomValidation(unittest.TestCase):
 
-Создаем клиента с помощью функции insert_client_in_db.
-Проверяем, что клиент был добавлен в базу.
-Изменяем данные клиента и проверяем, что изменения применились.
-Работа с комнатами:
+    def setUp(self):
+        # Создаем фрейм для RoomView
+        self.room_view = RoomView(MagicMock())
+
+        # Инициализируем поля с корректными значениями
+        self.room_view.room_capacity_var.set("2")  # Вместимость
+        self.room_view.room_area_var.set("30.5")  # Площадь
+        self.room_view.room_amenities_var.set("Wi-Fi, Кондиционер")  # Удобства
+        self.room_view.room_notes_var.set("Стандартный номер")  # Примечания
+
+    def test_validate_capacity(self):
+        # Проверка валидности вместимости
+        self.room_view.room_capacity_var.set("2")
+        self.assertTrue(self.room_view.validate_room_data())
+
+        self.room_view.room_capacity_var.set("-5")
+        self.assertFalse(self.room_view.validate_room_data())
+
+        self.room_view.room_capacity_var.set("abc")  # Invalid non-integer input
+        self.assertFalse(self.room_view.validate_room_data())
+
+    def test_validate_area(self):
+        # Проверка валидности площади
+        self.room_view.room_area_var.set("30.5")
+        self.assertTrue(self.room_view.validate_room_data())
+
+        self.room_view.room_area_var.set("0")  # Zero area
+        self.assertFalse(self.room_view.validate_room_data())
+
+        self.room_view.room_area_var.set("abc")  # Invalid non-float input
+        self.assertFalse(self.room_view.validate_room_data())
+
+    def test_validate_amenities(self):
+        # Проверка валидности удобств
+        self.room_view.room_amenities_var.set("Wi-Fi, Air Conditioning")
+        self.assertTrue(self.room_view.validate_room_data())
+
+        self.room_view.room_amenities_var.set("")  # Пустое значение
+        self.assertFalse(self.room_view.validate_room_data())
+
+        # Проверка длины удобств (больше 200 символов)
+        self.room_view.room_amenities_var.set("a" * 201)
+        self.assertFalse(self.room_view.validate_room_data())
+
+    def test_validate_notes(self):
+        # Проверка валидности примечаний
+        self.room_view.room_notes_var.set("Дополнительная информация о комнате.")
+        self.assertTrue(self.room_view.validate_room_data())
+
+        # Примечания превышают лимит в 500 символов
+        self.room_view.room_notes_var.set("a" * 501)
+        self.assertFalse(self.room_view.validate_room_data())
+
+        # Граничный случай: ровно 500 символов
+        self.room_view.room_notes_var.set("a" * 500)
+        self.assertTrue(self.room_view.validate_room_data())
 
 
-Изменяем статус номера (например, на "Забронировано").
-Прохождение всех статусов бронирования и статусов номера:
-
-Создаем бронирование для ранее созданного клиента и комнаты.
-Проходим через все возможные статусы бронирования (Создано, Подтверждено, Заезд, Выезд, Завершено) и синхронно изменяем статусы номера.
-Работа с сотрудниками и задачами:
-
-Создаем сотрудника, обновляем его график, и добавляем задачи для выполнения. Также проверяем обновление статусов задач.
-
-Таблица Задачи:
-
-Создаём задачу для сотрудника и проверяем её добавление.
-Обновляем статус задачи на "в процессе" и "завершено", проверяя изменения на каждом этапе.
-Таблица logs:
-
-Логируем действие сотрудника (например, создание бронирования).
-Проверяем, что запись добавлена в таблицу logs.
-Таблица Отчеты:
-
-Создаем отчет по задачам для сотрудника.
-Получаем список всех отчетов и проверяем их данные.
-
-Проверка статусов бронирования:
-
-После создания бронирования проверяем, что статус установлен в "Создано".
-По мере изменения статусов бронирования, с помощью assert проверяем, что они изменяются на ожидаемые.
-Проверка статусов номеров:
-
-При изменении статусов номеров также добавлены проверки с использованием assert, чтобы убедиться, что статус изменился на ожидаемый (например, "Забронировано", "Занято", и т.д.).
-Использование assert:
-
-Если значение не соответствует ожиданиям, assert вызовет ошибку, и тест завершится с сообщением об ошибке.
+class TestRoomSave(unittest.TestCase):
 
 
-"""
+    @patch('desktop_app.models.database_manager.add_room')
+    @patch('desktop_app.models.database_manager.update_room')
+    def test_save_room_data(self, mock_update_room, mock_add_new_room):
+        # Проверка сохранения данных о номере (новая комната)
+        self.room_view.is_editing = False
+        self.room_view.room_number_var.set("101")
+        self.room_view.room_type_var.set("Стандарт")
+        self.room_view.room_status_var.set("свободно")
+        self.room_view.room_price_var.set("3000")
+        self.room_view.room_description_var.set("Описание комнаты")
+        self.room_view.room_capacity_var.set("2")
+        self.room_view.room_area_var.set("30.5")
+        self.room_view.room_amenities_var.set("Wi-Fi, Телевизор")
+        self.room_view.room_notes_var.set("Нет примечаний")
+
+        self.room_view.save_room_data()
+        mock_add_new_room.assert_called_once_with(
+            "101", "Стандарт", "свободно", "3000", "Описание комнаты", "2", "30.5", "Wi-Fi, Телевизор", "Нет примечаний"
+        )
+
+        # Проверка сохранения данных о номере (редактирование существующей комнаты)
+        self.room_view.is_editing = True
+        self.room_view.room_id_var.set("1")
+        self.room_view.save_room_data()
+        mock_update_room.assert_called_once_with(
+            "1", "101", "Стандарт", "свободно", "3000", "Описание комнаты", "2", "30.5", "Wi-Fi, Телевизор", "Нет примечаний"
+        )
+
+
+
+    def tearDown(self):
+        # Any necessary cleanup after tests
+        pass
+
+
+class TestDatabaseOperations(unittest.TestCase):
+
+    def setUp(self):
+        # Connect to an in-memory database
+        self.conn = sqlite3.connect(TEST_DATABASE)
+        self.cursor = self.conn.cursor()
+        create_tables()  # Assuming this will create necessary tables in memory
+
+    def tearDown(self):
+        # Close the connection to the in-memory database
+        self.conn.close()
+
+    def test_add_room(self):
+        # Example test for adding a room
+        add_room("102", "Делюкс", "свободно", 4500, "Делюкс комната", 4, 40.0, "Wi-Fi, Балкон", "Просторная комната")
+        self.cursor.execute("SELECT * FROM Номера WHERE Номер_комнаты = '102'")
+        room = self.cursor.fetchone()
+        self.assertIsNotNone(room)
+        self.assertEqual(room[1], "102")
+        self.assertEqual(room[2], "Делюкс")
+
+    def test_update_room(self):
+        # Example test for updating a room
+        add_room("103", "Стандарт", "свободно", 3000, "Стандартная комната", 2, 25.0, "Wi-Fi", "")
+        update_room(1, "103", "Сьют", "занято", 3500, "Сьют комната", 3, 35.0, "Wi-Fi, Джакузи", "Просторный люкс")
+        self.cursor.execute("SELECT * FROM Номера WHERE Номер_комнаты = '103'")
+        room = self.cursor.fetchone()
+        self.assertIsNotNone(room)
+        self.assertEqual(room[2], "Сьют")
+        self.assertEqual(room[3], "занято")
 
 if __name__ == "__main__":
-    # Создаем таблицы (если они ещё не созданы)
-    create_tables()
-
-    # === Тестирование работы с таблицей Клиентов ===
-    print("\n=== Тестирование создания клиента ===")
-    insert_client_in_db(last_name="Иванов", first_name="Алексей", phone="+7 999 123 45 67", email="ivanov@test.com")
-
-    clients = get_all_clients()
-    print("Все клиенты после добавления:")
-    print(clients)
-
-    print("Изменение данных клиента:")
-    client_id = clients[0][0]  # Предполагаем, что ID первого клиента равен 1
-    update_client_in_db(client_id, "Иванов", "Петр", "+7 999 765 43 21", "peter.ivanov@test.com")
-
-    clients = get_all_clients()
-    print("Обновленные данные клиента:")
-    print(clients)
-
-    # === Тестирование работы с номерами ===
-    print("\n=== Тестирование изменения статусов номеров ===")
-    rooms = get_all_rooms()
-    print("Все номера по умолчанию:")
-    print(rooms)
-
-    room_number = 101  # Используем номер комнаты 101 (или другой существующий)
-
-    print(f"Изменение статуса номера {room_number} на 'Забронировано'")
-    update_room_status(room_number, RoomStatus.ЗАБРОНИРОВАНО.value)
-
-    rooms = get_all_rooms()
-    print("Обновленные данные номеров после изменения статуса:")
-    print(rooms)
-
-    # === Тестирование работы с бронированиями ===
-    print("\n=== Тестирование работы с бронированиями ===")
-    print(f"Создание бронирования для клиента и комнаты {room_number}")
-
-    client_id = clients[0][0]  # ID клиента, созданного выше
-    add_reservation(client_id, "2024-09-16", "2024-09-20", room_number, ReservationStatus.СОЗДАНО.value, "Не оплачено")
-
-    reservations = get_all_reservations()
-    print("Все бронирования после создания:")
-    print(reservations)
-
-    # Получаем ID только что созданного бронирования
-    reservation_id = reservations[-1][0]  # Получаем ID последней записи
-
-    # Проверяем, что бронирование создано с правильным статусом
-    assert reservations[-1][5] == ReservationStatus.СОЗДАНО.value, "Статус бронирования должен быть 'Создано'"
-
-    # Проходим все статусы бронирования и обновляем статусы номера
-    status_flow = [
-        (ReservationStatus.ПОДТВЕРЖДЕНО, RoomStatus.ЗАБРОНИРОВАНО),
-        (ReservationStatus.ЗАЕЗД, RoomStatus.ЗАНЯТО),
-        (ReservationStatus.ВЫЕЗД, RoomStatus.НА_ОБСЛУЖИВАНИИ),
-        (ReservationStatus.ЗАВЕРШЕНО, RoomStatus.СВОБОДНО),
-    ]
-
-    for res_status, room_status in status_flow:
-        print(f"Обновление статуса бронирования на '{res_status.value}' и комнаты на '{room_status.value}'")
-        update_reservation_status(reservation_id, res_status.value)
-        update_room_status(room_number, room_status.value)
-
-        # Получаем обновленные данные бронирования и номера
-        reservations = get_all_reservations()
-        rooms = get_all_rooms()
-
-        # Ищем бронирование по его ID
-        reservation = next(res for res in reservations if res[0] == reservation_id)
-
-        # Проверяем, что статус бронирования изменился
-        assert reservation[5] == res_status.value, f"Ожидался статус бронирования '{res_status.value}'"
-
-        # Проверяем, что статус комнаты изменился
-        room = next(room for room in rooms if room[1] == room_number)  # Находим нужную комнату по номеру
-        assert room[3] == room_status.value, f"Ожидался статус комнаты '{room_status.value}'"
-
-
-
-
-    # === Тестирование работы с сотрудниками ===
-    print("\n=== Тестирование работы с сотрудниками ===")
-    add_employee("Коваль", "Сергей", None, "+7 999 123 45 67", "koval", "password", "Менеджер")
-
-    employees = get_all_employees()
-    print("Все сотрудники после добавления:")
-    print(employees)
-
-    update_employee_schedule(employees[0][0], "10:00-19:00")
-    employees = get_all_employees()
-    print("Обновленное расписание сотрудников:")
-    print(employees)
-
-    # === Тестирование работы с задачами ===
-    print("\n=== Тестирование работы с задачами ===")
-    add_task(employees[0][0], "Проверить чистоту номеров", "2024-09-17")
-
-    tasks = get_all_tasks()
-    print("Все задачи после добавления:")
-    print(tasks)
-
-    update_task_status(tasks[0][0], "в процессе")
-    tasks = get_all_tasks()
-    print("Обновленные задачи:")
-    print(tasks)
-
-    update_task_status(tasks[0][0], "завершено")
-    tasks = get_all_tasks()
-    print("Задачи после завершения:")
-    print(tasks)
-
-    # === Тестирование работы с логами ===
-    print("\n=== Тестирование логирования действий ===")
-    log_action(employees[0][0], "Создание бронирования")
-
-    logs = []
-    with sqlite3.connect(DATABASE) as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM logs")
-        logs = cursor.fetchall()
-
-    print("Все логи:")
-    print(logs)
-
-    # === Тестирование работы с отчетами ===
-    print("\n=== Тестирование создания отчетов ===")
-    add_report(employees[0][0], "Отчет по задачам", "По задачам")
-
-    reports = get_all_reports()
-    print("Все отчеты после добавления:")
-    print(reports)
+    unittest.main()

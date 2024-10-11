@@ -13,85 +13,12 @@ def get_reservations():
 # Настройка логгера
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# def update_statuses(reservation_id, new_reservation_status, room_number, payment_status=None, payment_method=None):
-#     """Обновление статусов бронирования, номера, статуса оплаты и способа оплаты с логированием и обработкой ошибок."""
-#     try:
-#         # Открываем соединение с базой данных
-#         with sqlite3.connect(DATABASE) as conn:
-#             cursor = conn.cursor()
-#
-#             # Логируем начало операции
-#             logging.info(f"Начало обновления бронирования {reservation_id} на статус {new_reservation_status.name}")
-#
-#             # Обновляем статус бронирования
-#             cursor.execute("""
-#                 UPDATE Бронирования
-#                 SET Статус_бронирования = ?
-#                 WHERE id = ?
-#             """, (new_reservation_status.value, reservation_id))
-#
-#             # Определяем новый статус номера на основе нового статуса бронирования
-#             if new_reservation_status in [ReservationStatus.СОЗДАНО, ReservationStatus.ПОДТВЕРЖДЕНО]:
-#                 new_room_status = RoomStatus.ЗАБРОНИРОВАНО
-#             elif new_reservation_status == ReservationStatus.ЗАЕЗД:
-#                 new_room_status = RoomStatus.ЗАНЯТО
-#             elif new_reservation_status == ReservationStatus.ВЫЕЗД:
-#                 new_room_status = RoomStatus.НА_ОБСЛУЖИВАНИИ
-#             elif new_reservation_status in [ReservationStatus.ЗАВЕРШЕНО, ReservationStatus.ОТМЕНЕНО]:
-#                 new_room_status = RoomStatus.СВОБОДНО
-#             else:
-#                 raise ValueError(f"Неизвестный статус бронирования: {new_reservation_status}")
-#
-#             # Логируем новый статус комнаты
-#             logging.info(f"Обновление статуса комнаты {room_number} на {new_room_status.name}")
-#
-#             # Обновляем статус комнаты
-#             cursor.execute("""
-#                 UPDATE Номера
-#                 SET Статус_комнаты = ?
-#                 WHERE Номер_комнаты = ?
-#             """, (new_room_status.value, room_number))
-#
-#             # Обновляем статус оплаты, если он предоставлен
-#             if payment_status:
-#                 logging.info(f"Обновление статуса оплаты для бронирования {reservation_id} на {payment_status}")
-#                 cursor.execute("""
-#                     UPDATE Бронирования
-#                     SET Статус_оплаты = ?
-#                     WHERE id = ?
-#                 """, (payment_status, reservation_id))
-#
-#             # Обновляем способ оплаты, если он предоставлен
-#             if payment_method:
-#                 logging.info(f"Обновление способа оплаты для бронирования {reservation_id} на {payment_method}")
-#                 cursor.execute("""
-#                     UPDATE Бронирования
-#                     SET Способ_оплаты = ?
-#                     WHERE id = ?
-#                 """, (payment_method, reservation_id))
-#
-#             # Сохраняем изменения в базе данных
-#             conn.commit()
-#
-#             # Логируем успешное завершение операции
-#             logging.info(f"Бронирование {reservation_id} и комната {room_number} успешно обновлены.")
-#
-#     except sqlite3.Error as e:
-#         # Логируем ошибку работы с базой данных
-#         logging.error(f"Ошибка базы данных при обновлении бронирования {reservation_id}: {e}")
-#         raise RuntimeError(f"Ошибка базы данных: {e}")
-#
-#     except Exception as e:
-#         # Логируем любые другие ошибки
-#         logging.error(f"Произошла ошибка при обновлении бронирования {reservation_id}: {e}")
-#         raise RuntimeError(f"Произошла ошибка: {e}")
-
 def update_statuses(reservation_id, new_reservation_status, room_number, payment_status=None, payment_method=None,
                     check_in_date=None, check_out_date=None):
     """Обновление статусов бронирования, номера, статуса оплаты, способа оплаты и дат с логированием и обработкой ошибок."""
     try:
         # Открываем соединение с базой данных
-        with sqlite3.connect(DATABASE) as conn:
+        with sqlite3.connect(DATABASE, timeout=10) as conn:
             cursor = conn.cursor()
 
             # Логируем начало операции
@@ -179,7 +106,7 @@ def create_reservation(client_id, check_in_date, check_out_date, room_id, reserv
     """Создание нового бронирования с логированием и обработкой ошибок"""
     try:
         # Открываем соединение с базой данных
-        with sqlite3.connect(DATABASE) as conn:
+        with sqlite3.connect(DATABASE, timeout=10) as conn:
             cursor = conn.cursor()
 
             # Логируем создание бронирования

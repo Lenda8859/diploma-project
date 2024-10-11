@@ -174,7 +174,7 @@ class ReservationView(tk.Frame):
             params.append(f"%{middle_name}%")
 
         # Выполняем запрос к базе данных
-        with sqlite3.connect(DATABASE) as conn:
+        with sqlite3.connect(DATABASE, timeout=10) as conn:
             cursor = conn.cursor()
             cursor.execute(query, params)
             clients = cursor.fetchall()
@@ -203,7 +203,7 @@ class ReservationView(tk.Frame):
     def is_room_available(self, room_number):
         """Проверяет, доступен ли номер для бронирования (не забронирован, не занят и не на обслуживании)."""
         try:
-            with sqlite3.connect(DATABASE) as conn:
+            with sqlite3.connect(DATABASE, timeout=10) as conn:
                 cursor = conn.cursor()
                 cursor.execute("""
                     SELECT Статус_комнаты FROM Номера WHERE Номер_комнаты = ?
@@ -308,7 +308,7 @@ class ReservationView(tk.Frame):
 
     def load_reservations(self):
         """Загружает все бронирования в таблицу"""
-        with sqlite3.connect(DATABASE) as conn:
+        with sqlite3.connect(DATABASE, timeout=10) as conn:
             cursor = conn.cursor()
 
             # Выполняем запрос с использованием JOIN для получения имени клиента по client_id
@@ -334,6 +334,8 @@ class ReservationView(tk.Frame):
         for index, reservation in enumerate(reservations):
             # Формируем строку ФИО клиента
             client_name = f"{reservation[1]} {reservation[2]} {reservation[3]}"
+            # print(
+            #     f"ID: {reservation[0]}, ФИО: {client_name}, Дата заезда: {reservation[4]}, Дата выезда: {reservation[5]}")
 
             # Форматируем даты в формате день/месяц/год
             formatted_check_in = datetime.strptime(reservation[4], "%Y-%m-%d").strftime("%d/%m/%Y")
@@ -350,18 +352,24 @@ class ReservationView(tk.Frame):
             # Определяем тег строки для чередования цветов
             tag = 'row_even' if index % 2 == 0 else 'row_odd'
 
-            # Добавляем данные в таблицу с соответствующим тегом
+             # Добавляем данные в таблицу с соответствующим тегом
             self.reservation_treeview.insert("", tk.END, values=(
-                reservation[0], client_name, formatted_check_in, formatted_check_out, reservation[6],
-                reservation[7], reservation[8], reservation[9], reservation[10], date_created
+                reservation[0],  # ID
+                client_name,  # ФИО клиента
+                formatted_check_in,  # Дата заезда
+                formatted_check_out,  # Дата выезда
+                reservation[6],  # Номер комнаты
+                reservation[7],  # Статус бронирования
+                reservation[8],  # Статус оплаты
+                reservation[9],  # Способ оплаты
+                reservation[10],  # Примечания
+                date_created  # Дата создания
             ), tags=(tag,))
-
-
 
 
     def get_client_name_by_id(self, client_id):
         """Получает ФИО клиента по его ID"""
-        with sqlite3.connect(DATABASE) as conn:
+        with sqlite3.connect(DATABASE, timeout=10) as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT Фамилия, Имя FROM Клиенты WHERE id = ?", (client_id,))
             client = cursor.fetchone()

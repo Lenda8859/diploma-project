@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Форма бронирования</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <script>
+        function toggleSection(sectionId, toggleButtonId) {
+            const section = document.getElementById(sectionId);
+            const button = document.getElementById(toggleButtonId);
+            if (section.classList.contains('hidden')) {
+                section.classList.remove('hidden');
+                button.innerHTML = "Свернуть &#9650;";
+            } else {
+                section.classList.add('hidden');
+                button.innerHTML = "Развернуть &#9660;";
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="booking-form-container">
+        <h1>Форма бронирования</h1>
+        <form method="POST" action="{{ url_for('booking.book_room') }}">
+            <fieldset>
+                <legend>Данные гостя</legend>
+                <label for="last_name">Фамилия:</label>
+                <input type="text" name="last_name" required>
+
+                <label for="first_name">Имя:</label>
+                <input type="text" name="first_name" required>
+
+                <label for="middle_name">Отчество:</label>
+                <input type="text" id="middle_name" name="middle_name" required>
+
+                <label for="phone">Телефон:</label>
+                <input type="tel" name="phone" required>
+
+                <label for="email">E-mail:</label>
+                <input type="email" name="email" required>
+                <small>Придет письмо с подтверждением брони</small>
+            </fieldset>
+    	    <!-- Скрытые поля с номером комнаты и датами -->
+ 	    <label for="room_number">Номер комнаты:</label>
+    	    <input type="text" name="room_number" value="{{ room_number }}" readonly>
+ 	    <label for="checkin">Дата заезда:</label>
+            <input type="text" id="checkin" name="checkin" value="{{ checkin }}" readonly>
+	    <label for="checkout">Дата выезда:</label>
+    	    <input type="text" id="checkout" name="checkout" value="{{ checkout }}" readonly>
+
+            <fieldset>
+                <input type="checkbox" name="not_for_me" id="not_for_me">
+                <label for="not_for_me">Я бронирую не для себя</label>
+            </fieldset>
+
+            <fieldset>
+                <legend>Данные второго гостя <small>(Необязательно)</small></legend>
+                <button type="button" id="toggleGuest" class="toggle-button" onclick="toggleSection('second_guest', 'toggleGuest')">Развернуть &#9660;</button>
+                <div id="second_guest" class="hidden">
+                    <label for="second_last_name">Фамилия второго гостя:</label>
+                    <input type="text" name="second_last_name">
+
+                    <label for="second_first_name">Имя второго гостя:</label>
+                    <input type="text" name="second_first_name">
+
+                    <label for="second_middle_name">Отчество второго гостя:</label>
+                    <input type="text" id="second_middle_name" name="second_middle_name">
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Дополнительные данные</legend>
+                <label for="arrival_time">Предполагаемое время прибытия:</label>
+                <select name="arrival_time" id="arrival_time">
+                    <option value="Не знаю">Я не знаю</option>
+                    <option value="00:00-01:00">00:00 - 01:00</option>
+                    <option value="01:00-02:00">01:00 - 02:00</option>
+            	    <option value="03:00-04:00">03:00 - 04:00</option>
+                    <option value="04:00-05:00">04:00 - 05:00</option>
+                    <option value="05:00-06:00">05:00 - 06:00</option>
+                    <option value="06:00-07:00">06:00 - 07:00</option>
+                    <option value="07:00-08:00">07:00 - 08:00</option>
+                    <option value="08:00-09:00">08:00 - 09:00</option>
+                    <option value="09:00-10:00">09:00 - 10:00</option>
+                    <option value="10:00-11:00">10:00 - 11:00</option>
+                    <option value="11:00-12:00">11:00 - 12:00</option>
+                    <option value="12:00-13:00">12:00 - 13:00</option>
+                    <option value="13:00-14:00">13:00 - 14:00</option>
+                    <option value="14:00-15:00">14:00 - 15:00</option>
+                    <option value="15:00-16:00">15:00 - 16:00</option>
+                    <option value="16:00-17:00">16:00 - 17:00</option>
+                    <option value="17:00-18:00">17:00 - 18:00</option>
+                    <option value="18:00-19:00">18:00 - 19:00</option>
+                    <option value="19:00-20:00">19:00 - 20:00</option>
+                    <option value="20:00-21:00">20:00 - 21:00</option>
+                    <option value="21:00-22:00">21:00 - 22:00</option>
+                    <option value="22:00-23:00">22:00 - 23:00</option>
+                    <option value="23:00-00:00">23:00 - 00:00</option>
+                    <!-- Остальные варианты -->
+                </select>
+            </fieldset>
+
+            <fieldset>
+                <legend>Ваши пожелания <small>(Необязательно)</small></legend>
+                <button type="button" id="toggleWishes" class="toggle-button" onclick="toggleSection('wishes_section', 'toggleWishes')">Развернуть &#9660;</button>
+                <div id="wishes_section" class="hidden">
+                    <textarea name="wishes" id="wishes" rows="4" cols="50"></textarea>
+                </div>
+            </fieldset>
+
+            <input type="submit" value="Забронировать">
+        </form>
+    </div>
+</body>
+</html>

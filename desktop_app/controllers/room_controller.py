@@ -1,17 +1,18 @@
-from desktop_app.models.database_manager import add_room, get_all_rooms, DATABASE
+from desktop_app.models.database_manager import add_room, get_all_rooms, DATABASE, update_room
+
 import sqlite3
 from contextlib import contextmanager
 
 @contextmanager
 def db_connection():
-    conn = sqlite3.connect(DATABASE)
+    conn = sqlite3.connect(DATABASE, timeout=10)
     try:
         yield conn
     finally:
         conn.close()
 
-def add_new_room(room_number, room_type, price):
-    add_room(room_number, room_type, price)
+def add_new_room(room_number, room_type, room_status, price, description, capacity, area, amenities, notes):
+    add_room(room_number, room_type, room_status, price, description, capacity, area, amenities, notes)
 
 def get_rooms():
     try:
@@ -30,7 +31,7 @@ def get_change_room_status(room_id, new_status):
     """Функция для обновления статуса комнаты в базе данных"""
     try:
         print(f"Отладка: Обновление статуса комнаты с ID {room_id} на {new_status}")
-        with sqlite3.connect(DATABASE) as conn:
+        with sqlite3.connect(DATABASE, timeout=10) as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 UPDATE Номера SET Статус_комнаты = ? WHERE id = ?
@@ -51,8 +52,14 @@ def remove_room(room_number):
 
 from desktop_app.models.database_manager import add_room, get_all_rooms
 
-def add_new_room(room_number, room_type, price):
+
+def add_new_room(room_number, room_type, room_status, price, description, capacity, area, amenities, notes):
+    """
+    Добавление нового номера с расширенными параметрами.
+    """
     rooms = get_all_rooms()  # Получаем список всех комнат
     if any(room[0] == room_number for room in rooms):  # Проверяем, существует ли комната с таким номером
         raise ValueError(f"Комната с номером {room_number} уже существует.")
-    add_room(room_number, room_type, price)
+
+    # Добавляем новый номер с расширенными параметрами
+    add_room(room_number, room_type, room_status, price, description, capacity, area, amenities, notes)

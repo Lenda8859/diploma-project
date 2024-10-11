@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отель М</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+
+    <!-- Кнопка Личный кабинет в верхнем левом углу -->
+    <div class="header">
+        {% if session.get('user_name') %}
+            <span class="header-button">Привет, {{ session['user_name'] }}</span>
+            <a href="{{ url_for('user.logout') }}" class="header-button">Выйти</a>
+        {% else %}
+            <button id="openModal" class="header-button">Личный кабинет</button>
+        {% endif %}
+    </div>
+
+    <!-- Центральное фото отеля и миниатюры -->
+    <div class="hotel-photos">
+        <div class="main-photo">
+            <img src="/static/images/hotel000.jpg" alt="Центральное фото отеля" width="600px">
+        </div>
+        <div class="thumbnail-photos">
+            <img src="/static/images/hotel001.jpg" alt="Фото 1" width="100px">
+            <img src="/static/images/hotel002.jpg" alt="Фото 2" width="100px">
+            <img src="/static/images/hotel003.jpg" alt="Фото 3" width="100px">
+            <img src="/static/images/hotel004.jpg" alt="Фото 4" width="100px">
+            <img src="/static/images/hotel005.jpg" alt="Фото 5" width="100px">
+        </div>
+    </div>
+
+    <!-- Информация о гостинице -->
+    <div class="hotel-info">
+        <h1>Отель М</h1>
+        <p>Описание отеля: расположение, услуги и т.д. Например, отель находится в самом центре города с видом на Неву. Гостям предлагаются следующие удобства...</p>
+    </div>
+
+    <!-- Услуги отеля в виде значков -->
+    <div class="services">
+        <h2>Услуги</h2>
+        <img src="/static/icons/wi-fi.jpg" alt="Wi-Fi" title="Wi-Fi">
+        <img src="/static/icons/парковка.jpg" alt="Парковка" title="Парковка">
+        <img src="/static/icons/бассейн.jpg" alt="SPA" title="SPA">
+ 	<img src="/static/icons/Бар.jpg" alt="SPA" title="SPA">
+ 	<img src="/static/icons/Кондиционер.jpg" alt="SPA" title="SPA">
+ 	<img src="/static/icons/сауна.jpg" alt="SPA" title="SPA">
+ 	<img src="/static/icons/тв.jpg" alt="SPA" title="SPA">
+ 	<img src="/static/icons/Фен.jpg" alt="SPA" title="SPA">
+ 	<img src="/static/icons/Фитнес.jpg" alt="SPA" title="SPA">
+    </div>
+
+    <!-- Форма для выбора даты и поиска номеров -->
+    <div class="room-search">
+        <form action="{{ url_for('main.index') }}" method="GET" class="date-form">
+            <div class="form-group">
+                {% if not rooms %}
+                <p class="no-rooms-message">Введите предполагаемые даты поездки, для просмотра стоимости номеров</p>
+                {% endif %}
+                <div class="form-dates">
+                    <div class="form-group">
+                        <label for="checkin">Дата заезда:</label>
+                        <input type="date" id="checkin" name="checkin" value="{{ checkin }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="checkout">Дата выезда:</label>
+                        <input type="date" id="checkout" name="checkout" value="{{ checkout }}" required>
+                    </div>
+                </div>
+
+                <!-- Кнопка под полями дат -->
+                <div class="form-group submit-button">
+                    <button type="submit">Показать цены</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Таблица с доступными номерами -->
+    {% if rooms %}
+    <table class="room-table">
+        <thead>
+            <tr>
+                <th>Фото</th>
+                <th>Номер комнаты</th>
+                <th>Категория</th>
+                <th>Стоимость за сутки</th>
+                <th>Гостей</th>
+                <th>Площадь (м²)</th>
+                <th>Удобства</th>
+                <th>Описание</th>
+                <th>Стоимость за период</th>
+                <th>Действие</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for room in rooms %}
+            <tr>
+                <td><img src="/static/images/room_{{ room.number }}.jpg" alt="Фото номера" width="100px"></td>
+                <td>{{ room.number }}</td>
+                <td>{{ room.category }}</td>
+                <td>{{ room.price_per_night }} руб.</td>
+                <td>{{ room.guests }}</td>
+                <td>{{ room.area }} м²</td>
+                <td>{{ room.facilities }}</td>
+                <td>{{ room.description }}</td>
+                <td>{{ room.total_price }} руб.</td>
+                <td>
+                    <form action="{{ url_for('booking.book_room') }}" method="GET">
+                        <input type="hidden" name="room_number" value="{{ room.number }}">
+                        <input type="hidden" name="checkin" value="{{ checkin }}">
+                        <input type="hidden" name="checkout" value="{{ checkout }}">
+                        <button type="submit">Забронировать</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    <!-- Модальное окно для авторизации и регистрации -->
+    <div id="authModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Войдите в личный кабинет</h2>
+
+            <div class="tabs">
+                <button id="login-tab" class="tab active">Войти</button>
+                <button id="register-tab" class="tab">Зарегистрироваться</button>
+            </div>
+
+            <!-- Подключение формы для входа и регистрации -->
+            {% include '_auth_form.html' %}
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='scripts.js') }}"></script>
+</body>
+</html>
