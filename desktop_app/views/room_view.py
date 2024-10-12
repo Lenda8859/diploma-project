@@ -315,7 +315,7 @@ class RoomView(tk.Frame):
         room_id = room_info[0]  # ID комнаты
         new_status = self.search_room_status_var.get()  # Новый статус
 
-        print(f"Отладка: Изменение статуса для комнаты {room_info[1]} (ID: {room_id}) на {new_status}")
+        #print(f"Отладка: Изменение статуса для комнаты {room_info[1]} (ID: {room_id}) на {new_status}")
 
         if not new_status:
             messagebox.showwarning("Ошибка", "Выберите новый статус для номера.")

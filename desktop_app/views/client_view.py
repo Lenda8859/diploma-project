@@ -197,7 +197,7 @@ class ClientView(tk.Frame):
             self.client_tree.delete(item)
 
         # Отладка: Показать всех загруженных клиентов
-        print(f"Отладка: Загруженные клиенты: {clients}")
+        #print(f"Отладка: Загруженные клиенты: {clients}")
 
         # Создаем словарь: {ФИО: ID клиента}
         self.client_dict = {f"{client[1]} {client[2]} {client[3]}".strip(): client[0] for client in clients}
@@ -217,7 +217,7 @@ class ClientView(tk.Frame):
                 client[8]  # Доп.инфо
             ), tags=(tag,))
 
-        print(f"Отладка: Словарь клиентов: {self.client_dict}")
+        #print(f"Отладка: Словарь клиентов: {self.client_dict}")
 
     def search_clients(self, event):
         """Поиск клиента по фамилии, имени, отчеству, телефону или email"""

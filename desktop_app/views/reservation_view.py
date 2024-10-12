@@ -217,7 +217,7 @@ class ReservationView(tk.Frame):
                 #print(f"Отладка: Комната {room_number} доступна для бронирования, статус: {room_status}")
                 return True
         except Exception as e:
-            #print(f"Ошибка при проверке доступности комнаты: {e}")
+            print(f"Ошибка при проверке доступности комнаты: {e}")
             return False
 
 
@@ -241,7 +241,7 @@ class ReservationView(tk.Frame):
             check_out_date = datetime.strptime(self.check_out_date_var.get(), "%d/%m/%Y").strftime("%Y-%m-%d")
             #print(f"Отладка: Дата заезда - {check_in_date}, Дата выезда - {check_out_date}")
         except ValueError:
-            #print("Ошибка: Неверный формат даты.")
+            print("Ошибка: Неверный формат даты.")
             messagebox.showerror("Ошибка", "Неверный формат даты. Используйте формат ДД-ММ-ГГГГ.")
             return
 
@@ -440,7 +440,7 @@ class ReservationView(tk.Frame):
         #print(f"Отладка: Заезд для бронирования ID {reservation_id}, номер комнаты {room_number}")
 
         if room_number == 0:
-            #print("Ошибка: Номер комнаты установлен в 0, что недопустимо.")
+            print("Ошибка: Номер комнаты установлен в 0, что недопустимо.")
             return
 
         res_check_in(reservation_id, room_number)  # Передаем reservation_id и room_number
@@ -460,7 +460,7 @@ class ReservationView(tk.Frame):
         #print(f"Отладка: Выезд для бронирования ID {reservation_id}, номер комнаты {room_number}")
 
         if room_number == 0:
-            #print("Ошибка: Номер комнаты установлен в 0, что недопустимо.")
+            print("Ошибка: Номер комнаты установлен в 0, что недопустимо.")
             return
 
         res_check_out(reservation_id, room_number)  # Передаем reservation_id и room_number

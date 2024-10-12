@@ -8,10 +8,9 @@ from desktop_app.views.client_view import ClientView  # Импортируем C
 from desktop_app.views.reservation_view import ReservationView
 from desktop_app.views.login_view import LoginView
 from desktop_app.views.employee_view import EmployeeListView
-from desktop_app.models.database_manager import apply_migrations, create_tables, get_user_id
 from desktop_app.views.task_view import TaskView
 from desktop_app.views.report_view import ReportView
-
+import logging
 # Переменная с путём к базе данных
 DATABASE = 'F:/Hotel Management System/hotel_management.db'
 #
@@ -219,6 +218,12 @@ class MainApp(tk.Tk):
         room_view.pack(fill=tk.BOTH, expand=True)
 
     def open_reservation_view(self):
+        logging.debug("Открытие окна бронирования")
+        self.clear_frame()  # Удаляем предыдущие фреймы
+        reservation_view = ReservationView(self.container)
+        reservation_view.pack(fill=tk.BOTH, expand=True)
+        reservation_view.load_reservations()  # Загрузка бронирований
+        logging.debug("Загрузка данных о бронированиях завершена")
         self.clear_frame()  # Удаляем предыдущие фреймы
         reservation_view = ReservationView(self.container)
         reservation_view.pack(fill=tk.BOTH, expand=True)

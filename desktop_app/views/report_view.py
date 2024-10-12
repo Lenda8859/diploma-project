@@ -344,7 +344,7 @@ class ReportView(tk.Frame):
         """Экспорт данных отчета в Excel"""
         try:
 
-            print("Экспорт данных в Excel...")  # Для отладки
+            #print("Экспорт данных в Excel...")  # Для отладки
 
             # Собираем данные из Treeview
             data = []

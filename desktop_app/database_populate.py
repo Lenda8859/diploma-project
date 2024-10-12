@@ -333,7 +333,7 @@ def add_test_client():
     with sqlite3.connect(DATABASE, timeout=10) as conn:
         cursor = conn.cursor()
 
-        print("Добавляем клиентов...")
+        #print("Добавляем клиентов...")
         for i in range(1, 21):  # Создаем 20 клиентов
             cursor.execute("""
                 INSERT INTO Клиенты (Фамилия, Имя, Отчество, Телефон, Email, Адрес, Примечания)
@@ -366,7 +366,7 @@ def add_initial_room_data():
             cursor.execute("ALTER TABLE Номера ADD COLUMN Описание TEXT")
 
         conn.commit()
-        print("Все недостающие столбцы добавлены.")
+        #print("Все недостающие столбцы добавлены.")
 
 
         # Список всех номеров для добавления
@@ -494,7 +494,7 @@ def add_initial_room_data():
 
 
 if __name__ == "__main__":
-    add_initial_room_data()
+    #add_initial_room_data()
     #clear_tables()
     #add_test_client()
     #add_test_numer()
