@@ -279,10 +279,28 @@ logging.basicConfig(filename='F:/Hotel Management System/logs/reservation_log.lo
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
 
-def add_reservation(client_id, check_in_date, check_out_date, room_id, booking_status, payment_status,
+def add_reservation(client_id, check_in_date, check_out_date, room_number, booking_status, payment_status,
                     payment_method=None, additional_info=None):
+    """
+    Добавляет бронирование в базу данных.
+
+    Параметры:
+    - client_id: ID клиента.
+    - check_in_date: Дата заезда.
+    - check_out_date: Дата выезда.
+    - room_id: ID комнаты.
+    - booking_status: Статус бронирования (например, "Создано", "Подтверждено").
+    - payment_status: Статус оплаты (например, "Не оплачено", "Частично оплачено", "Оплачено").
+    - payment_method: Способ оплаты (необязательный параметр).
+    - additional_info: Дополнительная информация о бронировании (необязательный параметр).
+
+    Логирует каждую операцию и ошибки при возникновении.
+    """
     logging.debug(
-        f"Вызов add_reservation с параметрами: client_id={client_id}, check_in_date={check_in_date}, check_out_date={check_out_date}, room_id={room_id}, booking_status={booking_status}, payment_status={payment_status}, payment_method={payment_method}, additional_info={additional_info}")
+        f"Попытка добавить бронирование: client_id={client_id}, check_in_date={check_in_date}, "
+        f"check_out_date={check_out_date}, room_number={room_number}, booking_status={booking_status}, "
+        f"payment_status={payment_status}, payment_method={payment_method}, additional_info={additional_info}"
+    )
 
     try:
         # Преобразование строки статуса в элемент перечисления
@@ -292,20 +310,42 @@ def add_reservation(client_id, check_in_date, check_out_date, room_id, booking_s
         logging.error(f"Неверный статус бронирования: {booking_status}")
         raise ValueError(f"Неверный статус бронирования: {booking_status}")
 
-    with sqlite3.connect(DATABASE, timeout=10) as conn:
-        cursor = conn.cursor()
-        try:
-            # Вставка нового бронирования в базу данных
+    try:
+        with sqlite3.connect(DATABASE, timeout=10) as conn:
+            cursor = conn.cursor()
+
+            # Проверка, существует ли клиент с таким client_id
+            cursor.execute("SELECT id FROM Клиенты WHERE id = ?", (client_id,))
+            client_exists = cursor.fetchone()
+
+            if not client_exists:
+                logging.error(f"Клиент с ID {client_id} не найден.")
+                raise ValueError(f"Клиент с ID {client_id} не найден.")
+
+            # Проверка, существует ли номер комнаты с таким Номером комнаты
+            cursor.execute("SELECT id FROM Номера WHERE Номер_комнаты = ?", (room_number,))
+            room_exists = cursor.fetchone()
+
+            if not room_exists:
+                logging.error(f"Номер комнаты с ID {room_number} не найден.")
+                raise ValueError(f"Номер комнаты с ID {room_number} не найден.")
+
+            # Вставка нового бронирования
             cursor.execute("""
-                INSERT INTO Бронирования (client_id, Дата_заезда, Дата_выезда, Номер_комнаты, Статус_бронирования, Статус_оплаты, Способ_оплаты, Примечания, Дата_создания)
+                INSERT INTO Бронирования (client_id, Дата_заезда, Дата_выезда, Номер_комнаты, Статус_бронирования, 
+                Статус_оплаты, Способ_оплаты, Примечания, Дата_создания)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, date('now'))
-            """, (client_id, check_in_date, check_out_date, room_id, booking_status_enum.value, payment_status,
-                  payment_method, additional_info))
+            """, (client_id, check_in_date, check_out_date, room_number, booking_status_enum.value,
+                  payment_status, payment_method, additional_info))
             conn.commit()
+
             logging.info(f"Бронирование для клиента с ID {client_id} успешно добавлено.")
-        except sqlite3.IntegrityError as e:
-            logging.error(f"Ошибка базы данных при вставке бронирования: {e}")
-            raise ValueError(f"Ошибка базы данных: {e}")
+    except sqlite3.IntegrityError as e:
+        logging.error(f"Ошибка базы данных при добавлении бронирования: {e}")
+        raise ValueError(f"Ошибка базы данных: {e}")
+    except Exception as e:
+        logging.error(f"Неизвестная ошибка при добавлении бронирования: {e}")
+        raise e
 
 
 # Получение всех бронирований

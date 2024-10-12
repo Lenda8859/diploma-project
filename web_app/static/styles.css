@@ -19,7 +19,7 @@ body {
 
 .header-button {
     padding: 10px 20px;
-    background-color: #32CD32; /* Основной цвет кнопки */
+    background-color: #008000; /* Основной цвет кнопки */
     color: white; /* Цвет текста */
     border: none;
     border-radius: 5px; /* Скругленные углы кнопки */
@@ -56,7 +56,7 @@ body {
     display: inline-block;
     text-align: left;
     padding: 10px;
-    background-color: #D5D5D5B; /* Цвет фона формы */
+    background-color: #20B2AA; /* Цвет фона формы */
     border-radius: 8px; /* Скругленные углы формы */
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Тень под формой */
 }
@@ -95,7 +95,7 @@ body {
 .submit-button button {
     width: auto;
     padding: 10px 20px;
-    background-color: #32CD32; /* Цвет кнопки */
+    background-color: #DC143C; /* Цвет кнопки */
     color: #141613; /* Цвет текста кнопки */
     border: none;
     border-radius: 5px; /* Скругленные углы кнопки */
@@ -103,7 +103,7 @@ body {
 }
 
 .submit-button button:hover {
-    background-color: #0056b3; /* Цвет кнопки при наведении */
+    background-color: #DC143C; /* Цвет кнопки при наведении */
 }
 
 /* Сообщение о том, что номера не найдены */
@@ -128,7 +128,7 @@ body {
 }
 
 .room-table th {
-    background-color: #f2f2f2; /* Цвет фона для заголовков таблицы */
+    background-color: #20B2AA; /* Цвет фона для заголовков таблицы */
 }
 
 .room-table td img {
@@ -280,7 +280,7 @@ input[type="submit"]:hover {
 .toggle-button {
     background-color: transparent;
     border: none;
-    color: #32CD32; /* Синий цвет текста */
+    color: #008000; /* Синий цвет текста */
     cursor: pointer;
     font-size: 14px;
     padding: 0;
@@ -293,4 +293,139 @@ input[type="submit"]:hover {
 /* Прячем секции по умолчанию */
 .hidden {
     display: none;
+}
+
+
+/* Updated Button Styles */
+.header-button {
+    background-color: #008000; /* New color for header button */
+}
+
+.header-button:hover {
+    background-color: #008000; /* No change on hover */
+}
+
+.submit-button button {
+    background-color: #008000; /* Updated submit button color */
+}
+
+.submit-button button:hover {
+    background-color: #008000; /* Updated hover effect */
+}
+
+/* Updated Room Table Button */
+.room-table button {
+    background-color: #008000; /* New green background for table button */
+}
+
+.room-table button:hover {
+    background-color: #45a049; /* Darker hover effect */
+}
+
+/* Updated Table Header Styles */
+.room-table th {
+    background-color: #008000; /* New background color for table headers */
+    color: #ffffff; /* White text color */
+}
+
+/* Updated Hotel Description Styles */
+.hotel-info {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    font-size: 15px;
+    text-align: justify;
+    word-wrap: break-word;
+}
+
+/* Updated Date Input Field Background */
+.form-group input[type="date"] {
+    background-color: #d5d5d5; /* New default background color */
+}
+
+/* Updated Search Prices Button Text Color */
+.submit-button button {
+    color: #f5f5f5; /* Light text color for search button */
+}
+
+/* Updated Book Now Button Style */
+.room-table button {
+    background-color: #008000; /* Same green as search prices button */
+    color: #f5f5f5; /* Light text color */
+}
+
+.room-table button:hover {
+    background-color: #008000; /* Same hover effect as search button */
+}
+
+/* Updated Modal Window Button Styles */
+.modal-content .tab {
+    background-color: #008000; /* Green background */
+    color: #f5f5f5; /* Light text color */
+}
+
+.modal-content .tab:hover {
+    background-color: #008000; /* Hover effect for modal tabs */
+}
+
+/* Updated Book Now Button Style (smaller, like the booking form) */
+.room-table button {
+    background-color: #28a745; /* Matching background with booking form */
+    color: #ffffff; /* White text */
+    border: none;
+    padding: 8px 16px; /* Smaller padding */
+    text-align: center;
+    font-size: 14px; /* Smaller font */
+    cursor: pointer;
+    border-radius: 5px; /* Rounded corners */
+}
+
+.room-table button:hover {
+    background-color: #218838; /* Hover effect */
+}
+
+/* Updated Modal Window Style */
+.modal-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px; /* Rounded corners like booking form */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    width: 400px;
+    position: relative;
+}
+
+/* Buttons in Modal Window */
+.modal-content .tab {
+    background-color: #28a745; /* Green background like booking form button */
+    color: #ffffff; /* White text */
+    border: none;
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 5px; /* Rounded corners */
+    text-align: center;
+}
+
+.modal-content .tab:hover {
+    background-color: #218838; /* Hover effect */
+}
+
+/* Login and Book buttons in Modal */
+.modal-content .auth-form input[type="submit"] {
+    background-color: #28a745; /* Same as booking form button */
+    color: white; /* White text */
+    border: none;
+    border-radius: 5px; /* Rounded corners */
+    padding: 10px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.modal-content .auth-form input[type="submit"]:hover {
+    background-color: #218838; /* Hover effect */
+}
+
+/* Updated Date Search Form Background */
+.date-form {
+    background-color: #f0f0f0; /* Different background color */
 }
